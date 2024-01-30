@@ -21,9 +21,9 @@
 
 ###  http://application-inventory/deployedTo
 :deployedTo rdf:type owl:ObjectProperty ;
+            owl:inverseOf :hosts ;
             rdfs:domain :Application ;
             rdfs:range :Host .
-
 
 ###  http://application-inventory/exposedIn
 :exposedIn rdf:type owl:ObjectProperty ;
@@ -71,10 +71,17 @@
 #################################################################
 
 ###  http://application-inventory/Vulnerable
-:Vulnerable owl:equivalentClass [ rdf:type owl:Restriction ;
-                                  owl:onProperty :exposedTo ;
-                                  owl:someValuesFrom :Vulnerability
-                                ] .
+:Vulnerable owl:equivalentClass [
+    owl:unionOf  ( 
+                  [rdf:type owl:Restriction ;
+                  owl:onProperty :exposedTo ;
+                  owl:someValuesFrom :Vulnerability]
+
+                  [rdf:type owl:Restriction ;
+                  owl:onProperty :includes ;
+                  owl:someValuesFrom :Vulnerable]
+    ) 
+] .
 
 
 ###  http://application-inventory/Application
