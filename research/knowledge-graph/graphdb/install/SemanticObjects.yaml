@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: semantic-objects
+  labels:
+    app: semantic-objects
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: semantic-objects
+  template:
+    metadata:
+      labels:
+        app: semantic-objects
+    spec:
+      containers:
+      - name: semantic-objects
+        image: ontotext/platform-soaas-service:4.1.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SOAAS_JAVA_OPTS
+          value: "-Xmx2g -Xms512m"
+        - name: application.name
+          value: "soaas"
+        - name: sparql.endpoint.address
+          value: "http://graphdb:7200/"  
+        - name: sparql.endpoint.repository
+          value: "soaas"
+        - name: storage.location
+          value: "/var/lib/soaas"
+        - name: platform.license.file
+          value: "/PLATFORM.license"
+        volumeMounts:
+        - mountPath: /var/lib/soaas
+          name: soaas-data
+      volumes:
+      - name: soaas-data
+        persistentVolumeClaim:
+          claimName: soaas-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: soaas-data-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: semantic-objects
+  labels:
+    app: semantic-objects
+spec:
+  selector:
+    app: semantic-objects
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080

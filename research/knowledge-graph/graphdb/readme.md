@@ -4,7 +4,7 @@
 
 ```sh
 git clone https://github.com/Ontotext-AD/graphdb-helm && cd graphdb-helm
-helm upgrade --install graphdb .  --repo https://github.com/Ontotext-AD/graphdb-helm --namespace graphdb --create-namespace  --set global.storageClass=default
+helm upgrade --install graphdb . --namespace graphdb --create-namespace  --set global.storageClass=default
 ```
 
 ## Access to the workbench
