@@ -43,9 +43,7 @@ curl -X GET  -H 'Accept: application/sparql-results+json' http://localhost:7200/
 
 #Show all vulnerabilities, clusters exposed to it and when it happened first
 
-
 curl -X POST -H 'Content-Type: application/sparql-query' -H 'Accept: application/sparql-results+json' http://localhost:7200/repositories/test5 -d '
-prefix onto:<http://www.ontotext.com/>
 prefix :<http://application-inventory/>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
@@ -101,3 +99,27 @@ group by ?v ?c
     ]
   }
 }
+
+
+# Insert New host
+curl -X POST -H 'Content-Type: application/sparql-update' http://localhost:7200/repositories/test5/statements -d '
+prefix :<http://application-inventory/>
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+insert data {
+    :new-cluster rdf:type :Host ;
+        :name "New cluster"^^xsd:string ;
+        :description "New cluster"^^xsd:string .
+}
+'
+
+#delete new host
+curl -X POST -H 'Content-Type: application/sparql-update' http://localhost:7200/repositories/test5/statements -d '
+prefix :<http://application-inventory/>
+
+DELETE WHERE { ?object :name "New cluster";
+                       ?property      ?value .
+}
+'
