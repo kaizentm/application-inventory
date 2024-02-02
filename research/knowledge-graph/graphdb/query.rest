@@ -1,0 +1,103 @@
+# Get a list of repositories
+curl -X GET  -H 'Accept: application/sparql-results+json' http://localhost:7200/repositories
+
+{
+  "head" : {
+    "vars" : [
+      "uri",
+      "id",
+      "title",
+      "readable",
+      "writable"
+    ]
+  },
+  "results" : {
+    "bindings" : [
+      {
+        "readable" : {
+          "datatype" : "http://www.w3.org/2001/XMLSchema#boolean",
+          "type" : "literal",
+          "value" : "true"
+        },
+        "id" : {
+          "type" : "literal",
+          "value" : "test5"
+        },
+        "title" : {
+          "type" : "literal",
+          "value" : ""
+        },
+        "uri" : {
+          "type" : "uri",
+          "value" : "http://localhost:7200/repositories/test5"
+        },
+        "writable" : {
+          "datatype" : "http://www.w3.org/2001/XMLSchema#boolean",
+          "type" : "literal",
+          "value" : "true"
+        }
+      }
+    ]
+  }
+
+
+#Show all vulnerabilities, clusters exposed to it and when it happened first
+
+
+curl -X POST -H 'Content-Type: application/sparql-query' -H 'Accept: application/sparql-results+json' http://localhost:7200/repositories/test5 -d '
+prefix onto:<http://www.ontotext.com/>
+prefix :<http://application-inventory/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+select ?v ?c (MIN(?d) as ?introducedAt) 
+where {
+    << ?a :deployedTo ?c >> :deployedOn ?d .
+    ?v :exposedIn ?p .
+    ?p :includedIn ?a .   
+}
+group by ?v ?c
+' 
+
+{
+  "head" : {
+    "vars" : [
+      "v",
+      "c",
+      "introducedAt"
+    ]
+  },
+  "results" : {
+    "bindings" : [
+      {
+        "v" : {
+          "type" : "uri",
+          "value" : "http://application-inventory/easy-to-hack"
+        },
+        "c" : {
+          "type" : "uri",
+          "value" : "http://application-inventory/k3d-cluster"
+        },
+        "introducedAt" : {
+          "datatype" : "http://www.w3.org/2001/XMLSchema#date",
+          "type" : "literal",
+          "value" : "2020-02-11"
+        }
+      },
+      {
+        "v" : {
+          "type" : "uri",
+          "value" : "http://application-inventory/easy-to-hack"
+        },
+        "c" : {
+          "type" : "uri",
+          "value" : "http://application-inventory/aks-cluster"
+        },
+        "introducedAt" : {
+          "datatype" : "http://www.w3.org/2001/XMLSchema#date",
+          "type" : "literal",
+          "value" : "2020-03-13"
+        }
+      }
+    ]
+  }
+}
