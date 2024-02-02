@@ -1,0 +1,13 @@
+#Show all vulnerabilities, clusters exposed to it and when it happened first
+
+prefix onto:<http://www.ontotext.com/>
+prefix :<http://application-inventory/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+select ?v ?c (MIN(?d) as ?introducedAt) 
+where {
+    << ?a :deployedTo ?c >> :deployedOn ?d .
+    ?v :exposedIn ?p .
+    ?p :includedIn ?a .   
+}
+group by ?v ?c

@@ -58,6 +58,10 @@
                       owl:FunctionalProperty ;
              rdfs:range xsd:string .
 
+###  http://application-inventory/version
+:version rdf:type owl:DatatypeProperty ,
+                  owl:FunctionalProperty ;
+          rdfs:range xsd:string .
 
 ###  http://application-inventory/name
 :name rdf:type owl:DatatypeProperty ,
