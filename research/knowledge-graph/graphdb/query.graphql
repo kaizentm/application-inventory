@@ -1,0 +1,14 @@
+#Show all vulnerabilities, clusters exposed to it and when it happened first
+query vulnerableClusters (where: {deployedTo: {}}) {
+    Vulnerable {
+        name
+        deployedTo {
+            host{
+                name
+            }
+            deployedAt
+        }
+    }
+}
+
+See https://platform.ontotext.com/semantic-objects/tutorials/graphql-query.html
