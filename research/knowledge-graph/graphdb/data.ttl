@@ -37,6 +37,9 @@
     :name "Easy to hack"^^xsd:string ;
     :description "Easy to hack vulnerability"^^xsd:string .
 
+:hello-world :deployedTo :k3d-cluster
+:hello-world :deployedTo :aks-cluster
+:by-by-world :deployedTo :aks-cluster
 
 << :hello-world :deployedTo :k3d-cluster >>  :deployedOn "2020-02-11"^^xsd:date .
 << :hello-world :deployedTo :aks-cluster >>  :deployedOn "2020-03-13"^^xsd:date . 
