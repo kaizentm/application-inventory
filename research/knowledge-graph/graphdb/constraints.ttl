@@ -1,0 +1,26 @@
+@prefix : <http://application-inventory/> .
+prefix sh: <http://www.w3.org/ns/shacl#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+
+:PackageShape
+    a sh:NodeShape  ;
+    sh:targetClass :Package ;
+    sh:property [
+        sh:path :version ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+   ] .   
+
+
+
+#prefix :<http://application-inventory/>
+#PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+#prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+#
+#insert data {
+#    :some-package rdf:type :Package ;
+#        :name "Some Package"^^xsd:string ;
+#        :description "Some Package"^^xsd:string .
+#}
+#
