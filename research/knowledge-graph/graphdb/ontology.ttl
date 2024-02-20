@@ -5,6 +5,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @base <http://application-inventory/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
 
 <http://application-inventory> rdf:type owl:Ontology .
 
@@ -88,7 +89,7 @@
 
 
 ###  http://application-inventory/Application
-:Application rdf:type owl:Class .
+:Application rdf:type owl:Class . 
 
 
 ###  http://application-inventory/Host
@@ -100,8 +101,20 @@
 
 
 ###  http://application-inventory/Vulnerability
-:Vulnerability rdf:type owl:Class .
+:Vulnerability rdf:type owl:Class ;
+               rdfs:subClassOf prov:Entity ;
+               prov:wasGeneratedBy  :VulnerabilityReportingActivity .
 
+:VulnerabilityReportingActivity rdf:type owl:Class ;
+                                rdfs:subClassOf prov:Activity; 
+                                prov:wasAssociatedWith :SecurityAgent;
+                                prov:used  :VulnerabilityScanningResults .
+
+:SecurityAgent rdf:type owl:Class ;                            
+               rdfs:subClassOf prov:Agent .      
+
+:VulnerabilityScanningResults rdf:type owl:Class ;                            
+                              rdfs:subClassOf prov:Entity .
 
 ###  http://www.w3.org/2002/07/owl#Thing
 owl:Thing owl:equivalentClass [ rdf:type owl:Restriction ;

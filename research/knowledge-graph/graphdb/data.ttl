@@ -35,7 +35,8 @@
 
 :easy-to-hack rdf:type :Vulnerability;
     :name "Easy to hack"^^xsd:string ;
-    :description "Easy to hack vulnerability"^^xsd:string .
+    :description "Easy to hack vulnerability"^^xsd:string; 
+    prov:wasGeneratedBy  :monthly-reporting-activity .
 
 :hello-world :deployedTo :k3d-cluster .
 :hello-world :deployedTo :aks-cluster .
@@ -52,4 +53,18 @@
 :by-by-world :includes :common-utils-1.0.0 . 
 
 :easy-to-hack :exposedIn :common-utils-1.0.0 .
+
+:monthly-reporting-activity a :VulnerabilityReportingActivity ;
+    :name "Monthly Reporting Activity"^^xsd:string ;
+    :description "Monthly Reporting Activity"^^xsd:string ;
+    prov:wasAssociatedWith :darek;
+    prov:used  :monthly-scanning-results .
+
+:darek a :SecurityAgent ;
+    :name "Darek"^^xsd:string . 
+
+:monthly-scanning-results a :VulnerabilityScanningResults ;                            
+                          :name "Monthly Scanning Results"^^xsd:string . 
+
+
 
