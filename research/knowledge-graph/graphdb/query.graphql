@@ -1,4 +1,4 @@
-#Show all vulnerabilities, clusters exposed to it and when it happened first
+#Show all vulnerabilities, clusters exposed to it and when it happened 
 query vulnerableClusters (where: {deployedTo: {}}) {
     Vulnerable {
         name
