@@ -1,0 +1,954 @@
+Authors: Vy Ta Matt Luker Hannes Nel Allen Greaves Eugene Fedorenko
+
+
+💫 Paper Intent
+The intent of this paper is to communicate the outcomes of the Application Inventory workstream handled by an ISE Solution Ops V-team and the next steps. Readers will finish this paper with an understanding of the application inventory problem, its current state, and the ways in which it can be developed from Microsoft's perspective.
+This paper does the following:
+Highlights the business problem along with customer and PG use cases.
+Walks through several related projects and whether they fit into a potential solution and the reasoning. 
+Provides a high-level architecture for a POC solution that the ISE V-Team will plan to implement.
+Meant to gather feedback and validate the potential architecture.
+As well as gathering customers' feedback and potentially co-engineer with the product group teams for the relevant Azure services. 
+
+👉️ Definition
+We think of Application Inventory as an asset-based system that tracks itemized records and relationships of applications and application components involved in the Software Development Lifecycle (SDLC).
+The following are examples of what would be tracked: 
+Software and application versions.
+Packages and package versions including libraries.
+Models and algorithms used in models.
+Testing results.
+Additional attributes that can be individually identified with specific assets.
+
+💫 Motivation
+Our customers develop and utilize a multitude of applications. The process of application development and utilization is complex. From its inception as source code to its deployment in production, a single application involves various components such as algorithms, libraries, packages, images, test results, PRs, documentation, hosts, deployments and so on.
+Customers want their application lifecycle to be cost and resource effective, secure, observable and compliant. The amount of data will vary depending on the customer. Consider one of our XXXL customers like Walmart, which has over 1k dev teams and 11k Kubernetes clusters with thousands of apps, services, and/or repos (approx. 2k-4k). This requires a thorough analysis, which is challenging at such scale. 
+In ISE, we have a unique opportunity to analyze and address challenges of our S500 Enterprise customers, that manage hundreds of applications and deploy them to thousands of servers. At such a scale, the number of associated assets and their interdependencies, as well as the overall complexity of the procedure at the organizational level, increase significantly.
+The goal is to provide customers with a system that provides a flexible way to catalog application lifecycle assets as well as their dependencies with a powerful approach to query and analyze this data allowing the customers to manage and optimize their processes effectively.
+
+Customer use-cases
+The customer use-cases driving this initiative are aggregated from numerous customer engagements and interviews, performed by ISE crews and various Product Group teams. Detailed insights into customers like H&M, P&G, GM, Scenera (Sony), Microsoft, ABB are provided in the Customers Evidence Appendix.
+
+The range of challenges that customers prioritize and that depicts the need for an Application Inventory solution vary significantly. We can't address them all and we can't know all the unique use-cases that any customer may ever have, i.e., we can't boil the ocean. But through customer analysis, the most common use-cases can be aggregated and prioritized.  Our goal is to scope our POC to address 20% of challenges to satisfy 80% of the major customers' needs in this area.
+Below is the list of the most relevant use-cases, grouped by categories:  
+
+Category	Use-cases	
+Code Analysis	Catalog code and avoid duplications
+Find and reuse code
+Learn a new code base
+Find patterns for specific problems
+Visualize and understand code dependencies	
+Deployment Observability	Monitor what application/service versions and configurations are deployed to clusters/hosts in the environments
+Compare environments and see deployment discrepancy (e.g. how my "stage" environment is different from "prod")
+Track deployment and configuration history per environment, per application/service, per microservice
+Compare desired deployment state to the reality and see deployment drift	
+Service catalog	Catalog dial-tone platform services to be utilized by application dev teams
+Catalog applications to compose business solutions	
+Software Supply Chain Security	Track vulnerabilities and dependencies across applications, releases and deployments
+Licensing compliance of applications and application components
+Data privacy in applications and ML models	
+
+
+
+User stories
+The following is a selection of example user stories that should provide a good sense of the different personas and what they may expect from this solution. These user stories represent all the use-case categories that we have previously identified.  
+
+Application Development Team
+As an Application Development Team I want to be aware if there is code in my org that performs ML model training with Kubeflow, so that I can reuse it rather than invent a wheel. [Code Analysis]
+As an Application Development Team I want to know in what applications this API is used and where they are deployed, so that I can build a strategy of updating this API [Code Analysis, Deployment Observability]
+As an Application Development Team I want to know if the new algorithm implementation is deployed to the QA environment so that I can react on the reported issue effectively [Code Analysis, Deployment Observability]
+As an Application Development Team I want to know what observability services are available on the environments where my application is deployed, so that I can use them to collect and analyze observability data. [Service Catalog, Deployment Observability]
+As an Application Development Team I want to know in what release the vulnerability was introduced, in what release it was fixed and what versions of my applications are deployed across environments, so that I can either rollback or rollout my application accordingly. [Code Analysis, Software Supply Chain Security, Deployment Observability]
+Project Manager
+As a Project Manager, while starting a new project, I want to know what relevant code assets we have and what teams own them, so that we can collaborate with them and reuse the efforts. [Code Analysis]
+As a Project Manager I want to track metrics such as deployment frequency and time to deployment, so that I can evaluate the effectiveness of the deployment process of my project applications. [Deployment Observability]
+As a Project Manager I want to know what code repositories in my project are take a dependency impacted by the vulnerability, so that I can eliminate it. [Code Analysis, Software Supply Chain Security,]
+Platform Team
+As a Platform Team I want to know what platform configuration values are required to be provided for the production clusters in the east region and what values are actually applied, so that I can check them and update if needed. [Deployment Observability]
+As a Platform Team I want to know where the application is deployed on stage environment to analyze memory and CPU consumption by the application, so that I can properly allocate compute resources for this application on production environment. [Deployment Observability]
+Enterprise Architect
+As an Enterprise Architect I want to know what applications and services are available in my org, so that I can compose them in a solution to address business needs. [Service Catalog]
+Platform Engineering Team
+As a Platform Engineer I want to make preconfigured application templates available to Application development teams, so that I can communicate choices around code conventions, deployment options and technology stacks in a programmatic way. [Code Analysis, Service Catalog]
+As a Platform Engineer I want to see which applications are built using a particular version of a template so that I can assess the implications of introducing breaking changes or requiring application upgrades in the dependency chains of a template. [Code Analysis, Service Catalog]
+IT Management
+As IT Management I want to know what applications and releases are impacted by the vulnerability and where they are deployed, so that I can take appropriate actions. [Software Supply Chain Security, Deployment Observability]
+As IT Management I want to know what licensing dependencies we have in the org, so that I can take appropriate actions. [Software Supply Chain Security]
+As IT Management I want to the data sources for the ML models, used in the org, so that I can prevent data privacy violation. [Software Supply Chain Security]
+   
+PG use-cases
+Similar needs are being observed in other areas within Microsoft as well:
+Software Supply Chain Teams within Containers and 1ES are looking to implement knowledge graphs to gain insights into the end-to-end composition of a given piece of software (i.e. application). The increased focus (and pace) on improving the security of the software supply chain has resulted in a diaspora of tools and data making it difficult to make sense of.
+Folks in DevDiv have been looking to solve a similar challenge in allowing developers to gain end-to-end insights about their applications from the dev environments and code repositories to the related components and resources, such as any templates used.
+Systems 365 teams are looking into building a semantic and relational index of an enterprise development code, teams, APIs, tools, and infra. The primary focus is Microsoft developers who manage tens of thousands of services and hundreds of thousands of code repositories. The complexity of this code estate means that understanding what code assets we have, how they are changing, and how they relate to our infrastructure, our business, and to one another is an impossible task for any one person or team.
+Related projects
+We have reviewed and evaluated a list of relevant projects and concluded that none of them addressed the problem scope entirely. Every project focuses on a specific problem, hence their architecture and implementation. None of the projects can be easily enhanced to build a global extensible solution that focuses on all highlighted application inventory challenges. However, we have identified some projects as potential components or contributors to the global solution. We looked at Microsoft projects and others. For every project we tried to identify:
+What use-cases and challenges the project addresses.
+If the project can be easily extended/enhanced to the scope of application inventory by us and by customers according to their needs.
+If it can be reused as a component or a contributor to a hypothetical global solution.
+
+This section contains only brief project descriptions. Refer to the Related Projects Appendix for more details.
+Microsoft projects
+Developer Graph
+Summary:
+Scope: Code Analysis
+Extensibility: Hard. Data model and application logic should be rebuilt. 
+Reusability: Reasonable. Information about applications, their components and source repositories.
+
+The Developer Graph is a set of tools and services for creating a semantic and relational index of an enterprise development code, teams, APIs, tools, and infra, exposing these relationships as an API. This is an internal project in Systems 365 in support of a prototype. The target is support of 1P developers; however the ambition is to build a product that 3P developers can also leverage.
+
+There is a CLI tool, that accepts a URL of a Git source code repository, and it uses GPT-4-32k LLM model in Azure AI service to explain the code and store the result in Azure Data Explorer (ADX). There is also a Web application that interacts with the user and based on the source code semantics, it processes natural language queries to the Cloud Mine service. 
+
+The project is currently heavily focused on code analysis leveraging AI. It's in a very early stage. Developer Graph has a great potential to be a valuable contributor to the overall application inventory solution, providing information about existing applications, their components and source repositories.
+
+IQAPI
+Summary:
+Scope: Microsoft 365
+Extensibility: One should implement plugins and rebuild the graph schema in cooperation with the IQAPI maintenance team. Hard for customers.
+Reusability: Reasonable. Information about teams, people and their collaboration.
+The Intelligent Query API (IQAPI) is a graph query API that enables Cypher and natural language queries over the tenant-wide graph in Substrate. It is part of the Tenant-wide Graph (TWG) effort, where the customer data is looked at as a graph.
+
+IQAPI is a storage-less solution. So, it doesn't store anything itself, but rather acts as a query engine that federates requests to several connected data sources, mostly related to Microsoft 365. IQAPI exposes available data sources as a graph schema. Each data source comes with adapters that implement graph capabilities and provide data access. IQAPI accepts Cypher and natural language queries, identifies what data sources should be queried, hits the corresponding adapters, joins and aggregates the output.
+
+IQAPI is a powerful and flexible approach to query data stored in distributed and heterogenous data sources. It allows looking at the data from the graph perspective and query it with a standard query language such as Cypher. Support of natural language queries is also a huge advantage of the solution. With the lack of capabilities such as persistency, interoperability, data validation and provenance IQAPI is not a knowledge graph itself. It's a powerful query engine, which might be a good help with retrieving data from the supported by IQAPI data sources regarding teams, persons and their collaboration and submitting it to the Application Inventory system.
+
+Radius
+Summary:
+Scope: Application deployment bundle
+Extensibility: N/A
+Reusability: Reasonable. Application composition and application dependencies
+
+Radius is a platform for cloud-native application development. It bundles together cloud-native components and application dependencies such as cloud services. It enables developers and platform engineers to collaborate on delivering and managing cloud-native applications that follow organizational best practices for cost, operations and security. Radius is an open-source project that supports deploying applications across private cloud, Microsoft Azure, and Amazon Web Services.
+
+A modern cloud-native application is not just Kubernetes resources, but it also consists of cloud services such as a database, key vaults, gateways and such.
+The idea is to define everything (K8s workloads and cloud resources) as Bicep resources. Then have Radius translate those resources into Kubernetes manifests and apply them to the cluster and forward "normal" bicep resources to the cloud provider to provision cloud services. 
+
+While Radius is not considered as an application inventory solution, it implements an application deployment bundle technology. The deployment and provisioning of all application components are happening through a single point which gives the ability to track and show the application architecture in a form of Radius Application Graph: what components the application consists of and how they are connected to each other.  With that in place, Radius can be a valuable provider of application composition information.
+
+Resilient Edge/100k/Inventory Service
+Summary:
+Scope: Workload management in Kubernetes multi cluster environments
+Extensibility: Hard. Data model and application logic should be rebuilt. 
+Reusability: Reasonable. Inventory of environments, Kubernetes clusters, applications, namespaces and application assignments 
+
+Resilient Edge Data Service project (formerly 100k) targets to address the "GitOps at scale challenge" - workload management for a fleet of thousands of Kubernetes clusters with GitOps. It offers an OpenAPI and an opinionated inventory data model for creation, querying, and updating information about application deployments across the clusters. The project doesn't mandate the actual deployment approach, it relies on other tools for such functionality. Instead, it serves as central inventory storage containing information about applications, clusters, cluster groups and application assignments. The GitOps operators on the clusters consume this information and perform the deployments.
+
+From the application inventory perspective, if an organization uses Resilient Edge for the Kubernetes workload management, it may serve as a source of the information regarding environments, clusters with their properties and hierarchy, applications and their namespaces and where the applications are supposed to be deployed.
+
+Kalypso Observability Hub
+Summary:
+Scope: Deployment observability of applications across multi hosts environments
+Extensibility: Hard. Data model and application logic should be rebuilt.
+Reusability: Reasonable. Information on environments, hosts, applications, application components, application versions, deployments 
+
+Kalypso Observability Hub (KOH) is a central storage that contains deployment data with historical information on workload versions and their deployment state across hosts. The host may be a Kubernetes cluster, a VM, a cloud service or any compute where an application can be deployed. This data is used by dashboards and alerts for the deployment monitoring purposes, by the CD pipelines, implementing progressive rollout across environments and by various external systems that make decisions based on the deployment data.
+
+The project targets to address the following challenges:
+monitor what application/service versions are deployed to clusters/hosts in the environments
+compare environments and see deployment discrepancy (e.g. how my "stage" environment is different from "prod")
+track deployment history per environment, per application/service, per microservice
+compare desired deployment state to the reality and see deployment drift
+
+KOH provides a relational database model, API and built-in collectors gathering information from GitOps repositories and Azure Resource Graph about applications, application versions, environments, hosts, application assignments and deployment states. 
+
+KOH is focused on assets and relationships related to the facts of deployments. It has been built to observe deployments. In order to extend it to the scope of the application inventory, one should rebuild the system. However, given that most of the highlighted challenges that we want to address with the application inventory system are related to deployment observability, Kalypso Observability Hub is considered an essential source of information for the overall solution.
+
+Projects to keep an eye on
+Service Tree
+DevDiv Knowledge Graph
+MS Graph
+
+Other projects
+GUAC
+Summary:
+Scope: Secure Software Supply Chain
+Extensibility: Hard. Core code changes are needed to introduce new types of collectors as there is no concept of plugins
+Reusability: Reasonable, GUAC could be leveraged as a source assuming ingested data falls under the expected formats (SLSA, attestations, signatures, etc.)
+
+Graph for Understanding Artifact Composition (GUAC) aggregates software security metadata into a high-fidelity graph database—normalizing entity identities and mapping standard relationships between them. Querying this graph can drive higher-level organizational outcomes such as audit, policy, risk management, and even developer assistance. GUAC addresses the need for comprehensive software build, security, and dependency metadata across the software ecosystem.
+
+Overview:
+Aggregating Metadata: It aggregates software security metadata from both public and private sources into a “knowledge graph.” 
+Central Source: GUAC provides developers, security teams, auditors, and other stakeholders with a central source of information about the security, provenance, and overall trustworthiness of individual components in their applications and codebases.
+GraphQL Interface: The data in GUAC can be accessed via a GraphQL interface, allowing for the development of integrations, command-line tools, visualizations, and policy engines
+
+Leveraging GUAC as a knowledge graph would require one of the following two approaches. The first being, adhering to the formats, schemas, and collectors currently implemented in GUAC. This includes being limited to artifact formats, SLSA attestations, and the existing signature tooling and expectations. In GUACs current state, this would exclude the needs of many customers. The second approach would be to introduce all the changes needed to make GUAC a more flexible and extensible solution allowing for new artifact types, file formats, collector types, and schemas. Either approach would require in-depth knowledge of GUACs ecosystem, community buy in, and a substantial time commitment.
+
+The current state of GUAC is not production ready and cannot meet the needs of our customers. While leveraging GUAC as a metadata source to feed application inventory system seems reasonable, using it as a core system does not.
+
+Grafeas
+Summary:
+Scope: Secure Software Supply Chain, build artifacts, service catalog
+Extensibility: Reasonable. All processing is handled outside of Grafeas and pushed in. Schemas can be added/updated as needed and new data sources can push data when needed.
+Reusability: Hard. Querying data seemed difficult to retrieve expected related data with REST calls and/or SDKs. This was in part due to outdated code and examples. With some work Grafeas could work as a data source for a larger solution.
+
+Store, query, and derive metadata about all your software artifacts, regardless of their type and where they are located: container and VM images, binaries, files, packages on a local machine or private, hybrid or multi-cloud environments.
+
+Grafeas divides the metadata information into notes and occurrences. Notes are high-level descriptions of particular types of metadata. Occurrences are instantiations of notes, which describe how and when a given note occurs on the resource associated with the occurrence. This division allows third-party metadata providers to create and manage metadata on behalf of many customers. It also allows for fine-grained access control of different types of metadata. 
+
+Grafeas makes it easy to write complex queries for supply chain information. Some examples are:
+Find all images that are built from a particular Github commit that is known to have introduced a security problem.
+Find all images that were built by a certain version of a certain builder when that builder is known to have been compromised.
+Find all images in my project that are impacted by CVE-1234.
+Generate a software bill of materials for my image that I will publish externally.
+
+Due to the simplistic approach Grafeas takes on schemas, data ingestion, storage, and querying it allows for a robust number of unique entity types to be stored like deployments, repositories, artifact references, and dependencies. This makes pushing data into Grafeas by leveraging their REST API a simple task which does not require an in-depth understanding of the underlying infrastructure.
+
+A few concerns with Grafeas are the lack of updates and maintenance happening within the core repositories and SDKs. There are many unaddressed issues ranging from a few months to a few years old. While Grafeas could potentially meet the needs of application inventory, it would come with the immediate need of maintenance work for multiple SDKs as well as the core project.
+
+Backstage
+Summary:
+Scope: Service Catalog, UI portal
+Extensibility: Reasonable. Nice framework to build new features on and nice plugin architecture with a lot of existing plugins.
+Reusability: Reasonable as a software catalog, Hard for everything else as search is a weak point when needed to search across entities for specific data.
+
+Backstage is an open platform CNCF Incubation project for building developer portals powered by a centralized software catalog. Backstage allows teams to independently manage their resources allowing the company insight into everything in the software catalog.
+
+Backstage is constructed out of three parts:
+Core - Base functionality built by core developers in the open-source project.
+App - The app is an instance of a Backstage app that is deployed and tweaked. The app ties together core functionality with additional plugins. The app is built and maintained by app developers, usually a productivity team within a company.
+Plugins - Additional functionality to make Backstage more useful for a given scenario.
+
+Due to the separation of concerns across core, app, and plugins combined with the detailed documentation, Backstage seems very extensible and flexible. There is a large ecosystem of existing plugins for gathering key metadata including: builds, releases, vulnerabilities, and package info. If new metadata needs to be collected, the separation of these components along with the exiting plugin architecture makes it easy to introduce new functionality for collecting metadata as needed.
+
+Key Points:
+Extensible framework for frontend/backend/plugins
+Nice portal/UI
+Supports Auth/Identity for many providers including OAuth, OpenID Connect, and bring your own OIDC.
+Plugin architecture
+Backend database and caching options
+Thorough documentation with examples
+
+Due to the solid framework, plugins, and extensibility, Backstage looks like a solid portal solution with a centralized software catalog. Currently, one of the shortfalls is the limited search functionality of the existing REST API. While the frameworks within Backstage do support extending search functionality in many ways, this is a key feature which would have to be considered. However, even with this concern Backstage may successfully address customer challenges from the Service Catalog category. The key difference from what we think about application inventory is that Backstage software catalog is still a catalog, a list of components hiding the relationships between them under the hood and treating them as second-class citizens. With that said, Backstage may be a valuable provider of information for the application inventory system if an organization uses Backstage for the service catalog purposes. Another good use of Backstage to consider is its UI capabilities. It can host a pre-built application inventory UI which can be easily extended by a customer for their needs. 
+    
+Architectural Considerations
+Extensibility
+By its nature, the enumeration of assets, operated by the application inventory system, is dynamic and depends on the customer and their needs. For example, H&M is interested in the algorithms and data that are used to train ML models and the business units that are consuming them; while Siemens Healthcare, producing applications for customers, is interested in which customers from which rings are subscribed to which applications. Given the assets are not carved in stone, the relationships between assets, their properties and what semantic data those relationships deliver are even less defined. 
+
+The Application Inventory system is expected to operate out-of-the-box assets (e.g. Environment, Application, Version, Deployment, Package, Vulnerability and such) and provide an option for the customers to enrich the system and define their own assets and relationships. It should be transparent for the user and for the system what assets are pre-baked and what assets are brought by a customer. There should be no difference from UI/API perspective in querying and updating those assets and establishing relationships between them.
+
+Knowledge Graph
+The dynamic nature of the data, the potential complexity of the relationships, and the extensibility requirements makes us consider assets and their relationships as a graph. Moreover, a knowledge graph. The base value of this system is to help analyze and answer questions about the software lifecycle. Given that the range of questions and their complexity may vary significantly, the advantage that an analytical system can give is to provide "smart" data rather than implement some hard coded logic. Hence, knowledge graph.  
+A knowledge graph has several capabilities that distinguish it from just a graph:
+Ontology
+The classification and explanation of objects and vertices in the graph. Describes what asset classes are there and their properties and how they connect to each other. Ontology is a key capability for Inferencing/Reasoning and Interoperability.
+
+Inferencing and Reasoning
+The ability to dig up new knowledge out of existing data and making it explicit and explainable. For example, the fact that a package contains a vulnerability, and this package is included in an application which is deployed to cluster A, makes cluster A vulnerable. This knowledge is identified automatically by a knowledge graph using backward (query-time) or forward (write-time) chaining and it is stored in the same graph as an explicit fact.
+Given the data is most likely coming from disparate or unrelated sources, we want to use ontology rules to automatically enrich assets with properties and establish new connections between assets once the data is in the graph.
+
+Interoperability
+The ability to expose, use, and federate graph data across multiple systems and making the graph data equally understandable by humans and machines. Interoperability enables extensibility and the ability for this system to be used by other systems, including AI and LLM services which is a high priority for our system. 
+
+Validation
+Checkin the data against constraints and business rules. The application inventory system makes sense only if it contains credible and valid data. 
+ 
+Provenance
+The ability to build context around data such as, where/when/how data originated. It contributes to the auditability, credibility, and traceability of the knowledge graph data.
+
+AI/LLM
+Application Inventory system is useful if it is easy to query. Given the great variety of possible questions to the system, it is hard to cover them all with a pre-built UI. On the other hand, we can't expect all users to hit the system with graph database queries such as SPARQL, Cypher, Gremlin and even GraphQL queries. That would be a too high bar. AI/LLM service can help address this challenge by processing natural language queries, identifying the intent, generating queries in a graph query language and summarizing and shaping the result.  Assuming the knowledge graph ontology is defined with a standard semantic vocabulary, such as OWL, an LLM could be prompted to understand the graph data structure and generate queries to the graph without analyzing the actual data. 
+Future enhancements would include AI services that can be used to analyze dependency, dataflows, detect anomalies, predict issues, and improve effectiveness.
+
+Persistent Data Layer
+Knowledge graph data is systematically gathered from external sources and systems through specialized collectors, tasked with parsing, organizing, and validating data. This curated data is later funneled into the knowledge graph using an API, where it is stored in a predefined graph database. The primary duties of collectors encompass the intricate tasks of collecting, parsing, and filtering data from various sources, contributing crucial insights to the knowledge graph. Furthermore, collectors bear the responsibility of managing any authentication intricacies required by diverse data sources. Some assets might be very heavy in terms of storage. For example, binaries, source code, deployment logs, traces. etc. Depending on the asset type, knowledge graph may contain only indexes pointing to the actual original data storage. 
+
+The possession of the data gives application inventory system the following benefits:
+Implementation of the knowledge graph capabilities such as inferencing, validation and provenance
+Data is readily available and can be queried and processed as needed. Quering the graph is as effective as the underlying graph database implementation.
+The data in the graph is cleaned, preprocessed and pre-aggregated. The collector collects only useful information from the raw data source
+The application inventory system owns and governs the collected data, e.g. stores it as long as it is needed, partitions it, etc.
+The data can be organized in different layers with different access permissions
+It's not necessarily that the source system has its own data storage. The data might be captured by a collector "on the fly" and persisted in the knowledge graph 
+
+Graph Database
+There are a number of available graph databases on the market to store the application inventory data. In general, there are two types of graph databases: Property Graph (PG) and Resource Description Framework (RDF).
+
+Labeled Property Graph (L/PG)
+The most common model of the property graph is Labeled Property Graph (LPG). LPG provides a light-weight introduction for the management of graph data. It represents a graph with a set of nodes and edges, connecting the nodes. Each node and edge is essentially a map of key-value pairs. There is not any formal schema to describe and validate the data in the graph.  
+
+LPG is a popular developers' choice when the data needs to be collected ad hoc and graph analytics are performed in the course of a single project with the graph being discarded afterwards. LPG focuses on efficient deep-data traversals, path analysis, and storage of arbitrary graph data. However, the technology stack around LPGs lacks standardized schema or modelling languages and there are no provisions for formal semantics and interoperability specifications (e.g. no serialization formats, federation protocols, etc.). All this makes LPGs less interoperable among users and software. This also applies to the lack of standardization in LPG query languages. There are several popular alternatives including Cypher used by https://neo4j.com/ and https://docs.janusgraph.org/basics/gremlin/ (popularized by https://tinkerpop.apache.org/ graph computing framework), but they are linked to specific vendors, which limits interoperability. It is worth mentioning that there is also an effort to standardize the LPG query language, resulting in the proposal of the https://www.gqlstandards.org/.
+Example Property Graph (PG) databases:
+Neo4j
+Azure Cosmos DB
+Amazon Neptune LPG
+
+Resource Description Framework (RDF)
+RDF graph originated from a standard for describing web resources and data interchange and was inspired by the notion of the https://www.w3.org/standards/semanticweb/. The goal of this standard is to enable the representation, storage, and exchange of resources (especially metadata on the web) in a graph-native way. RDF focuses on atomic decomposition of data suitable for ontology creation and data exchange. RDF is metadata centric and it emphasizes ontology/taxonomy, semantic industry standards, Interoperability, and reusability. 
+
+RDF models a graph with Subject->Predicate->Object triple statements, such as Eugene->loves->Sailing. Subjects, predicates, and objects may have their own properties represented by scalar data types such as strings, numbers, dates, booleans, etc. and by complex values which may participate as a subject/object in other triple statements. RDF utilizes SPARQL for its query language and comes with a family of standard semantic languages to define schemas, ontologies and validation rules. 
+RDF standard semantic languages includes:
+RDFS (RDF Schema)
+OWL (Web Ontology Language)
+SHACL (Shapes Constraint Language)
+PROV-O (Provenance Ontology). 
+The standard query language for all RDF graph databases is SPARQL. 
+Example Resource Description Framework (RDF) databases:
+GraphDB
+Stardog
+RDFox
+Amazon Neptune RDF
+
+LPG vs RDF Comparison
+
+The major differences between RDF and LPG are around RDF's associations with the semantic web. There are many layers that have been built on top of RDF to provide descriptions for the semantics of each of the entities. LPG, on the other hand, does not attempt to be self-describing at all. The meaning and interpretation of the LPG structures are left up to the consumer of the data.
+
+Given the organizational principal value, that RDF brings with its mature ontology/taxonomy stack, many LPG vendors started offering RDF connectors/plugins (e.g. Neo4j Neosemantics) to the property graph data. These plugins allow for ontologies and validation schemas with RDFS, OWL, SHACL and others on top of an LPG graph as if it were a normal RDF graph. This option gives some flexibility for us and for customers to proceed with a graph database of their choice and use the industry standard semantics to implement knowledge graph capabilities that are essential for the application inventory system.  
+
+ 
+API Layer
+The API Layer for the application inventory system would include the following:
+SPARQL endpoint (if knowledge graph is an RDF database).
+REST endpoint which receives a SPARQL payload.
+GraphQL endpoint to provide a convenient method for connecting external systems (along with customer data).
+These options enable several different ways to query the application inventory system and would allow for automation and dashboarding. Another benefit is that some graph databases already have embedded GraphQL endpoints (e.g. GraphDB) with auto-generated GraphQL schemas. There are some that also provide components/plugins for Apollo GraphQL servers (e.g. Neo4j). In the latter case, the presence of an Apollo GraphQL server is required at the API level as well.
+
+High level architecture 
+Based on the outlined considerations and findings from above, the following is an example architectural diagram that would represent the application inventory system:
+
+
+The central component is a Knowledge Graph, as mentioned above, based on a graph database with the support of RDF semantics. There are a few options on the table that could be used in the POC implementation. Currently, based on the benefit analysis from above, we will be choosing either GraphDB or Noe4j with the Neosemantics plugin. The system would be extensible and allow for other graph database options as well. Refer to the Graph Database Experiments Appendix for the details on experimenting with GraphDB. 
+
+The knowledge graph exposes a data ontology with standard languages such as RDFS, OWL and PROV-O which makes the data structure and data provenance information understandable across systems. The knowledge graph leverages SHACL to define data integrity constraints and validation rules. Depending on the graph database there are database features that allow for automatic inference with the query-time or write-time chaining. 
+
+Data is entered into the knowledge graph from a variety of different sources that contain relevant information for the application inventory, such as code, version, host, algorithm, vulnerability, dependency, library, deployment, etc. Application inventory system comes with a predefined list of collectors that submit data to the knowledge graph via GraphQL mutating queries. The implementation of each collector, technology, and the data collecting strategy (push/pull) depends on the source and the nature of its data. A collector might be just a simple workload polling data from the source system and pushing it to the graph or it might be a complex ETL pipeline running on top of Azure Data Factory or Apache Hop.
+
+The list of assets, collected by the application inventory system on the customer side, is configurable and depends on the customer's needs. Customers would be free to enhance the application inventory ontology with their own custom metadata and define their own custom validation rules. They could implement their own collectors, fetching data from their source systems and submitting it to the knowledge graph with an API endpoint of their choice. Customers are welcome to implement and host on the knowledge graph platform their own graph algorithms for reasoning and optimization like join/remove duplications, remove stale data and such. 
+
+Users communicate with the Application Inventory system via a web UI with chat capabilities. They can query the system directly with SPARQL or GraphQL and they can visualize and analyze the graph. On top of that, the application inventory system would come with a set of prebuilt dashboards, answering the most common questions. This set of dashboards is configurable and extensible for a customer. 
+
+Users can also query the system with a natural language. AI and LLM services would process these queries, identify intentions, and based on the ontology it would generate SPARQL queries and send that to the knowledge graph. It then combines the results and generates the answer in a human readable format. The AI/LLM would analyze if the answer makes sense to be represented as a table or human readable (PlantUML/Mermaid) chart, as an example, to show dependencies and data flows. The user would get human-like answers accompanied with diagrams and tables to their questions such as: "What clusters are impacted by the vulnerability X"? "When did it happen"? "What services in the org implement RAG pattern"? "Where is this data coming from"? 
+
+Next Steps
+ISE V-team is planning to work on a POC implementation of the application inventory system in the next "Panda" semester. With the intent of validating this POC with internal ISE and PG Microsoft teams along with external customers through ISE engagements.
+
+The goals of these next steps are the following:
+Accelerate customers with the highlighted use-cases.
+Collect and address feedback around Application Inventory.
+Work with product groups towards implementing the solution or parts of the solution as Azure services.
+
+Resources
+App Inventory Management Proposal 
+Knowledge Graph MVE
+Secure Software Supply Chain Observability
+The Developer Graph
+Introducing State as a new entity in open telemetry
+Application Inventory System Definition
+Knowledge Graphs in the Enterprise
+[O'Reilly Media] Building Knowledge Graphs
+GraphQL and Graph Databases (datalanguage.com)
+A New Hope: The Rise of the Knowledge Graph - Ontotext
+What is a Knowledge Graph? | Ontotext Fundamentals
+What is RDF-star? - Ontotext
+What is RDF and Why to Use It? | Ontotext Fundamentals Series
+Property Graphs: Training Wheels on the way to Knowledge Graphs (semanticarts.com)
+Making Sense of Data with RDF* vs. LPG - OpenCredo
+Integrating Ontologies with Large Language Models for Decision-Making | by Anthony Alcaraz | Artificial Intelligence in Plain English
+neo4j-labs/neosemantics: Graph+Semantics: Import/Export RDF from Neo4j. SHACL Validation
+Graph Fundamentals — Part 2: Labelled Property Graphs | by Kevin Feeney | TerminusDB Community | Medium
+Graph Fundamentals - Part 3: Graph Schema Languages (terminusdb.com)
+GraphQL: APIs for humans
+Introduction to GraphQL | GraphQL
+Neo4j and GraphQL - Developer Guides
+
+Appendix. Customer Evidence
+H&M
+Code analysis
+H&M started an initiative Semantic Software Analysis Framework for Capability Mapping and Efficiency Enhancement. The aim of this project is to design and implement an advanced semantic software analysis framework that enhances understanding of the existing software codebase from GitHub and Azure DevOps. Using state-of-the-art language learning models, our solution will aim to detect standalone capabilities, identify missing or overlapping data flows, monitor changes in data types, and other features related to efficiency, thereby improving development speed and maintainability.
+Deployment observability
+H&M uses GitHub workflows Azure DevOps pipelines as CI/CD orchestrators to deploy ML models across environments. The feedback that we received from their ML engineers pointed us to the lack of overview of what is currently deployed on the environments, when it was deployed, history of deployments, ability to rollback a deployment. Referring to their previous experience with Spinnaker it was stated that it used to be easier to see this environment overview and to understand what is supposed to be promoted from "stage" to "prod". 
+
+GM (SDV)
+Deployment observability
+GM SDV has adopted GitOps based deployment approach for the UCP application microservices on the K8s clusters in Azure. They want to understand what versions of those microservice are deployed on what clusters across a chain of environments from dev to prod.
+
+P&G
+Deployment observability
+P&G is struggling to understand what applications/versions are deployed across K8s clusters on factories' lines, what platform and application configuration values are applied. They want to track history of both deployment updates and configuration changes.
+Service Catalog
+At P&G application developers develop applications and services that are configured and composed by enterprise architects into use-cases/solutions that operate factory lines to produce different product types. Enterprise architects require a catalog of available applications with a description of what they do, how they should be configured and used.
+
+Scenera (Sony)
+Deployment observability
+Scenera deploys ML Models and serving code on VMs in the edge. They want to understand what versions of serving code and what versions of ML models are deployed across environments
+
+Microsoft
+Code Analysis
+Microsoft developers are seeking to evaluate the code library and development tools to gain a deeper insight into the company's code resources. Their objective is to utilize code and systems more efficiently, establishing a framework for new functionalities and generating consistent recurring revenue opportunities across a range of products aimed at developers.
+
+ABB
+Service Catalog
+There are over 100+ applications across the organization. One of the key initiatives taken by the organization is to consolidate similar products into a single infrastructure and foundation. This is in line with the vision of moving application into a standard foundation, thereby enabling the support, maintenance and enhancements of the foundation centrally which reduce the total cost of ownership. Development/Product team across the organization can create reusable components (such as cloud enablement, analytics and AI capability) and deploy that at a central place for other product team to consume. This not only reduces redundant development, but also empowers product team to showcase their components at a central place. 
+In order to cater for such requirements, there is a need to have a service catalog which can enable divisions, hubs and product groups to easily access the components (or packaged code base) along with the deployment procedures, thus enabling quality and faster adoption. 
+
+Woolies X, J&J, NATO, BAE, Blackrock
+Software Supply Chain Security
+These customers are focused on identifying and tracking dependencies and vulnerabilities. They commonly ask questions such as:
+Which releases, if any, take a dependency impacted by the Common Vulnerabilities and Exposures (CVE)?
+Which applications (code repositories), if any, take a dependency impacted by the CVE? 
+Where are releases running that are potentially vulnerable to the CVE?
+When was the dependency introduced to the application and how long has the application been vulnerable to the CVE? 
+
+CASG, BAE, UBS, Leidos/1901 Group, Blackrock
+Software Supply Chain Security
+The customers on this list are interested in obtaining information about the provenance and chain of custody of a particular release. This may include details such as the build agent, code repository and commit information, human or group approval, container image location, management of the k8s manifest (if applicable), release process and actors, and the current location of the running application.
+
+Appendix. Related projects.
+
+Developer Graph
+The Developer Graph is a set of tools and services for creating a semantic and relational index of an enterprise development code, teams, APIs, tools, and infra, exposing these relationships as an API. This is an internal project in Systems 365 in support of a prototype. The target is support of 1P developers, however the ambition is to build a product that 3P developers can also leverage.
+
+The project is currently heavily focused on code analysis leveraging AI. It targets to address the following problem statement:
+"Microsoft Manages tens of thousands of services and hundreds of thousands of code repositories. The complexity of this code estate means that understanding what code assets we have, how they are changing, and how they relate to our infrastructure, our business, and to one another is an impossible task for any one person or team." 
+
+
+
+ There is a CLI tool, that accepts a URL of a Git source code repository and it uses GPT-4-32k LLM model in Azure AI service to explain the code and store the result in Azure Data Explorer (ADX). There is also a Web application that interacts with the user and based on the source code semantics, it generates Kusto queries for the Cloud Mine service from the natural language queries.
+
+The project is currently heavily focused on code analysis leveraging AI. It's in a very early stage. Developer Graph has a great potential to be a valuable contributor to the overall application inventory solution, providing information about existing applications, their components and source repositories.
+
+🔗Links
+Developers Graph (Private repo, Ryan Sweet, Requires Microsoft EMU account)
+https://microsoft-my.sharepoint.com/:w:/p/rysweet/EdIh5KyEvZxPszyc1qtd3TQBGEFWjJjXXCt_eTDW5MO9gQ?e=fQOZSn
+
+https://microsoft.sharepoint.com/:w:/t/TeamCTO/EeCTm2TLa3pOr2D_ti4aLrsBfnfI8J5Gtc6snwNiY-J73Q?e=8fYC2x
+
+https://microsoft-my.sharepoint.com/:p:/p/melowe/EbTzn2wvPbBLrK_4S5vd8H8BK_PJLtB0wNt9dQNWLKxRGA?e=6mNeUU
+
+
+IQAPI
+The Intelligent Query API (IQAPI) is a graph query API unlocking https://neo4j.com/developer/cypher/ and natural language queries over the tenant-wide graph in Substrate. It is part of the Tenant-wide Graph (TWG) effort under Semantic Fabric. Semantic Fabric is the capability to find the right customers knowledge based on semantic understanding of both the task/question and the data. Tenant Wide Graph is the part of Semantic Fabric where the customers data is represented as a graph.
+
+IQAPI is a storage-less solution. So, it doesn't store anything itself, but rather acts as a query engine that federates requests to a number of onboarded/connected data sources. IQAPI exposes available data sources as a graph schema. Each data source comes with adapters that implement graph capabilities and provide data access. IQAPI accepts Cypher and natural language queries, identifies what data sources should be queried, hits the corresponding adapters, joins and aggregates the output.
+IQAPI retrieves data from a number of connected data sources, mostly related to Microsoft 365, and provides information about entities and their connections, represented on the following graph diagram:
+
+
+
+IQAPI is extensible and can connect to any underlying data store or service by mapping the raw data to graph constructs such as nodes and edges with corresponding properties. In order to onboard a new data source one should implement necessary adapters in .Net, register them with the system and update the overall graph schema which is implemented as a C# class. 
+
+In a way, the project ideas are very similar to the GraphQL concept, where you define a schema describing a graph and implement resolvers (adapters) to the underlying data sources. Then you hit a GraphQL server, such as Apollo GraphQL, with GraphQL queries, and the server collects, caches, aggregates and returns the data. This is an open source technology, it is very popular and well known in the developer community.
+
+IQAPI is a powerful and flexible approach to query data stored in distributed and heterogenous data sources. It lets look at the data from the graph perspective and query it with a standard query language such as Cypher. Support of the natural language queries is also a huge advantage of the solution. With the lack of capabilities such as persistency, reasoning/inference, ontology, data validation and provenance IQAPI is not a knowledge graph itself. It's a powerful querying engine, which might be a good help with the retrieving data from the supported by IQAPI data sources and submitting it to the Application Inventory system. 
+
+🔗Links
+https://eng.ms/docs/experiences-devices/m365-core/microsoft-search-assistants-intelligence-msai/substrate-intelligence/common-documentation/substrate-wide-graph/iqapi/overview
+
+Radius
+Radius is a platform for the cloud-native application development. It bundles together cloud-native components and application dependencies such as cloud services. It enables developers and platform engineers to collaborate on delivering and managing cloud-native applications that follow organizational best practices for cost, operations and security. Radius is an open-source project that supports deploying applications across private cloud, Microsoft Azure, and Amazon Web Services.
+
+Cloud native developers realize their applications require much more than Kubernetes, including support for dependencies like application programming interface (API) front ends, key/value stores, caches, and observability systems. Amidst these challenges for developers, their corporate IT counterparts also must enforce an ever-growing matrix of corporate standards, compliance, and security requirements, while enabling rapid application innovation.
+
+Radius attempts to address these challenges that arise across development and operations as companies continue their journey to cloud. 
+Key features of the Radius platform include:
+Team Collaboration: Radius Applications and Environments allow developers to work with Operations on application definition and delivery.
+Infrastructure Recipes: Swappable infrastructure that complies with organization best practices and IT policy be default.
+Application Graph: Understand how services and infrastructure in an application are interconnected.
+Cloud Neutral: Deploy across development, on-premises and cloud environments with a consistent experience.
+Incremental Adoption: Integrate Radius into existing workflows and existing catalogs of Infrastructure-as-Code templates.
+
+The main idea is to define application Kubernetes workloads and dependencies, such as cloud resources, as Bicep recourses. Then have Radius translate those resources into Kubernetes manifests and apply them to the cluster and forward "normal" bicep resources to the cloud provider to provision cloud services. 
+
+While Radius is not considered as an application inventory solution, it implements an application deployment bundle technology. The deployment and provisioning of all application components are happening through a single point which gives the ability to track and show the application architecture in a form of Radius Application Graph: what components the application consists of and how they are connected to each other.  With that in place, Radius can be a valuable provider of application composition information.
+
+🔗Links
+https://github.com/radius-project/radius
+
+
+Resilient Edge/100k/Inventory Service
+Resilient Edge Data Service project (formerly 100k) targets to address the "GitOps at scale challenge" - workload management for a fleet of thousands of Kubernetes clusters with GitOps. It offers an OpenAPI and an opinionated inventory data model for creation, querying, and updating information about application deployments across the clusters.
+
+
+
+
+The main concept of the project is to have a control plane (inventory data service) in a database with rest API. The data in this database is automatically transformed by CD pipelines in one or many GitOps repositories, consumed by the clusters.
+Key points:
+Azure SQL database is exposed with Rest API by IST (Inventory Service Thingy) service, which is a dotnet application running on a managing Kubernetes cluster (e.g. AKS).
+The data model is relational and consists of Clusters, Cluster Groups, Applications and Namespaces tables.
+IST provides Select and CRUD operations for this model
+CD pipelines use Goa (GitOps Automation - formerly known as PiB) to generate manifests basing on metadata from the inventory service (clusters, applications, namespaces) and put them to the Platform GitOps Repo to be consumed by the reconcilers on clusters
+
+From the application inventory perspective, if an organization uses Resilient Edge for the Kubernetes workload management, it may serve as a source of the information regarding environments, clusters with their properties and hierarchy, applications and their namespaces and where the applications are supposed to be deployed.
+
+🔗Links
+https://github.com/cse-labs/Project100k
+
+
+https://github.com/cse-labs/cluster-inventory-service
+
+
+https://github.com/cse-labs/Project100k/blob/dev/docs/IST-docs/architecture-overview.md
+
+Kalypso Observability Hub
+
+Kalypso Observability Hub is a central storage that contains deployment data with historical information on workload versions and their deployment state across hosts. This data is used by dashboards and alerts for the deployment monitoring purposes, by the CD pipelines, implementing progressive rollout across environments and by various external systems that make decisions based on the deployment data.
+
+The goal of the observability hub is to enable Platform and Application Dev teams to perform the following activities:
+monitor what application/service versions are deployed to clusters/hosts in the environments
+compare environments and see deployment discrepancy (e.g. how my "stage" environment is different from "prod")
+track deployment history per environment, per application/service, per microservice
+compare desired deployment state to the reality and see deployment drift
+
+It is stated that the challenges, mentioned above, are considered addressed, to some extent, if Platform and Application Dev teams have dashboards and alerts that provide information as in the following reports:
+
+
+
+KOH provides a relational database model, API and built-in collectors gathering information from GitOps repositories and Azure Resource Graph about applications, application versions, environments, hosts, application assignments and deployment states. It is designed to store large amount of deployment data, that is easy to query with complex queries and consume in various dashboards and alerts.
+
+
+
+
+The data is coming to the observability hub from two different sources. High-level information, describing the desired state of the deployments, which includes environments, application versions, deployment targets and such is transferred to the observability hub from the application GitOps repositories. Application CI/CD pipelines submit to the GitOps repositories Kubernetes manifests along with the deployment descriptors, describing what these manifests are all about, what application version is about to be deployed and where, source code and build tracking information. The facts of actual deployment are coming from the hosts. The reconcilers on the hosts, such as Flux, report to the deployment state storage the compliance status with the GitOps repositories. They report what GitOps commit has been deployed to a host, when and in what status. The "desired" and the "real" deployment states correlate with each other by the means of commit Id and compose the whole picture of the deployment state.
+
+Given that most of the highlighted challenges that we want to address with the application inventory system are related to deployment observability, Kalypso Observability Hub is considered an essential source of information for the overall solution.
+
+🔗Links
+Kalypso Observability Hub
+Graph for Understanding Artifact Composition (GUAC)
+Customers want to improve the security posture of their platforms and the resiliency of their production systems by determining their exposure to software vulnerabilities and by remediating exposures quickly and effectively. To achieve this, an observability solution for SSSC is needed that can build relationships between relevant data and query this data to make business decisions (e.g., determine impact and remediation steps). There are many ways to realize this goal, but GUAC is a leading open-source software (OSS) solution commonly considered and specifically intended for this purpose. 
+
+GUAC expects users to have a strong grasp of its ontology and understand its approach for mapping the three main elements (evidence, actors, and software) to a universal tree. This is a high bar of entry for users wanting to leverage GUAC as a universal knowledge graph.  Another concern is how tightly coupled GUAC is to Supply Chain Levels for Software Artifacts (SLSA). Because there are so many diverse sources for data, the graph should be able to gather data without restrictions on format or artifacts. For example, customers should be able to ingest SBOMs signed using Notation regardless of an in-toto attestation. In GUAC, this would lead to missing nodes and links between the software and actor trees. Without the proper nodes present, the graph cannot easily be traversed. 
+
+Signatures are another example of where format and tooling choices will hinder GUAC’s functionality. Signatures must be created using the expected tooling, like cosign, and adhere to the SLSA provenance which is an in-toto attestation with a SLSA-approved claim. A knowledge graph must accommodate similar scenarios to ensure ingested data is not lost, unreachable, or cumbersome.
+
+Due to the tight coupling to SLSA, limited envelope support for signatures, limited out of the box extensibility for data collectors, and overall non-production readiness of the product, GUAC is not a recommended solutions to meet the needs of application inventory but could act as a source for SSSC artifacts where applicable.
+
+Architectural overview:
+
+
+
+Grafeas
+Grafeas is an open artifact metadata API to audit and govern your software supply chain. Grafeas provides a convenient way to retain crucial information about the software supply chain without complex configuration or schemas by dividing metadata information into notes and occurrences. Notes are high-level descriptions of particular types of metadata. Occurrences are instantiations of notes, which describe how and when a given note occurs on the resource associated with the occurrence. This division allows third-party metadata providers to create and manage metadata on behalf of many customers. It also allows for fine-grained access control of different types of metadata.
+
+Metadata can easily be pushed into Grafeas for processing and storage leveraging their REST API. For example, introducing metadata from a new CI/CD platform would not require any code or configuration changes. Grafeas offers both horizontal and vertical querying by enabling both kinds of queries for metadata across artifacts. Horizontal query is a query across all artifacts with a specific property, e.g. "Find all images that are built from a particular GitHub commit that is known to have introduced a security problem". Vertical query is a query about metadata across software development lifecycle for a specific artifact, e.g. "Find all source, build, test, and vulnerabilities metadata for a container image."
+
+Whether you switch from one CI/CD vendor to another or transition from a public cloud to a hybrid environment, your metadata about software artifacts remains intact. For instance, build metadata in Grafeas captures essential details—such as source information, build commands, and the builder—common to all builds across platforms like GitHub, ADO, Travis, CircleCI, and Jenkins, ensuring a consistent representation.
+
+Grafeas Core Design Principles:
+Universal coverage: Grafeas stores structured metadata against the software component’s unique identifier (e.g., container image digest), so you don’t have to co-locate it with the component’s registry, and so it can store metadata about components from many different repositories.
+Hybrid cloud-friendly: Just as you can use JFrog Artifactory as the central, universal component repository across hybrid cloud deployments, you can use the Grafeas API as a central, universal metadata store.
+Pluggable: Grafeas makes it easy to add new metadata producers and consumers (for example, if you decide to add or change security scanners, add new build systems, etc.)
+Structured: Structured metadata schemas for common metadata types (e.g., vulnerability, build, attestation, and package index metadata) let you add new metadata types and providers, and the tools that depend on Grafeas can immediately understand those new sources.
+Strong access controls: Grafeas allows you to carefully control access for multiple metadata producers and consumers.
+Rich query-ability: With Grafeas, you can easily query all metadata across all your components so you don’t have to parse monolithic reports on each component.
+
+Grafeas Architecture:
+
+
+
+
+
+Key Points
+Has support for integration of IAM via their reference server implementation.
+Client libraries seem dated and have mismatches on API versions which makes it difficult to work with as they stand now.
+Filtering on list API calls does not work as expected and lack of documentation made it hard to understand the expected approach.
+The concept of projects, notes, and occurrences is refreshing as it doesn't care where data comes from but if needed you can still separate where data originated from.
+Has support for good list of schemas
+VULNERABILITY
+BUILD
+IMAGE
+PACKAGE
+DEPLOYMENT
+DISCOVERY
+ATTESTATION 
+COMPLIANCE 
+DSSE_ATTESTATION
+VULNERABILITY_ASSESSMENT
+SBOM_REFERENCE
+Supports Note field validators for expected types:
+In-toto SLSA provenance
+SBOMS (spdx, cyclone, etc)
+VEX statements
+
+Due to the simplistic approach Grafeas takes on schemas, data ingestion, storage, and querying it allows for a robust number of unique entity types to be stored like deployments, repositories, artifact references, and dependencies. This makes pushing data into Grafeas by leveraging their REST API a simple task which does not require an in-depth understanding of the underlying infrastructure.
+
+A few concerns with Grafeas are the lack of updates and maintenance happening within the core repositories and SDKs. There are many unaddressed issues ranging from a few months to a few years old. While Grafeas could potentially meet the needs of application inventory, it would come with the immediate need of maintenance work for multiple SDKs as well as the core project.
+Backstage
+Backstage is an open platform for building developer portals powered by a centralized software catalog. Backstage allows teams to independently manage their resources allowing the company insight into everything in the catalog. Backstage can track many different resource types including but not limited to libraries, websites, services, ML models, deployments, and repositories. Backstage also tracks metadata like who owns it, dependencies, deployments, relationships, etc. All this metadata can be shared with plugins inside Backstage to enable other management features, like resource monitoring and testing.
+
+While the focus seems to be a software catalog, due to the solid framework, plugins, and extensibility it has the building blocks to support a more general portal.
+
+Backstage is constructed out of three parts:
+Core - Base functionality built by core developers in the open-source project.
+App - The app is an instance of a Backstage app that is deployed and tweaked. The app ties together core functionality with additional plugins. The app is built and maintained by app developers, usually a productivity team within a company.
+Plugins - Additional functionality to make Backstage more useful for a given scenario.
+
+Due to the separation of concerns across core, app, and plugins combined with the detailed documentation, Backstage seems very extensible and flexible. There is a large ecosystem of existing plugins for gathering key metadata including: builds, releases, vulnerabilities, and package info. If new metadata needs to be collected, the separation of these components along with the exiting plugin architecture makes it easy to introduce new functionality for collecting metadata as needed.
+
+Key Points:
+Extensible framework for frontend/backend/plugins
+Nice portal/UI
+Supports Auth/Identity for many providers including OAuth, OpenID Connect, and bring your own OIDC.
+Plugin architecture
+Backend database and caching options
+Thorough documentation with examples
+
+What it is for: 
+For engineering managers, it allows you to maintain standards and best practices across the organization, and can help you manage your whole tech ecosystem, from migrations to test certification.
+For end users (developers), it makes it fast and simple to build software components in a standardized way, and it provides a central place to manage all projects and documentation.
+For platform engineers, it enables extensibility and scalability by letting you easily integrate new tools and services (via plugins), as well as extending the functionality of existing ones.
+For everyone, it’s a single, consistent experience that ties all your infrastructure tooling, resources, standards, owners, contributors, and administrators together in one place.
+
+Due to the solid framework, plugins, and extensibility Backstage looks like a solid portal solution with a centralized software catalog. Currently, one of the shortfalls is the limited search functionality of the existing REST API. While the frameworks within Backstage do support extending search functionality in many ways, this is a key feature which would have to be considered. However, even with this concern Backstage may successfully address customer challenges from the Service Catalog category. The key difference from what we think about application inventory is that Backstage software catalog is still a catalog, a list of components hiding the relationships between them under the hood and treating them as second-class citizens. With that said, Backstage may be a valuable provider of information for the application inventory system if an organization uses Backstage for the service catalog purposes. Another good use of Backstage to consider is its UI capabilities. It can host a pre-built application inventory UI which can be easily extended by a customer for their needs.
+
+
+
+Appendix. Graph Database Experiments.
+
+For the sake of getting our hands dirty and validating some concepts, highlighted in this paper, we have built a very simple knowledge graph on top of GraphDB (Ontotext) database.
+
+Ontology
+The knowledge graph operates with a few sample assets such as Application, Host, Package and Vulnerability.
+
+
+
+The node classes, their relationships and properties are defined in the ontology with RDFS and OWL semantics:
+<http://application-inventory> rdf:type owl:Ontology .
+
+#################################################################
+# Classes
+#################################################################
+
+:Application rdf:type owl:Class . 
+
+:Host rdf:type owl:Class .
+
+:Package rdf:type owl:Class .
+
+:Vulnerability rdf:type owl:Class .
+
+### A thing is vulnerable if it is exposed to a Vulnerability or it includes a Vulnerable thing
+:Vulnerable owl:equivalentClass [
+    owl:unionOf ( 
+                  [rdf:type owl:Restriction ;
+                   owl:onProperty :exposedTo ;
+                   owl:someValuesFrom :Vulnerability]
+
+                  [rdf:type owl:Restriction ;
+                   owl:onProperty :includes ;
+                   owl:someValuesFrom :Vulnerable]
+                ) 
+] .
+
+#################################################################
+# Relationships
+#################################################################
+
+:deployedTo rdf:type owl:ObjectProperty ;
+            rdfs:domain :Application ;
+            rdfs:range :Host .
+
+:exposedTo rdf:type owl:ObjectProperty ;
+           owl:inverseOf :exposedIn ;
+           rdfs:domain :Package ;
+           rdfs:range :Vulnerability .
+
+:exposedIn rdf:type owl:ObjectProperty ;
+           rdfs:domain :Vulnerability ;
+           rdfs:range :Package .
+
+
+:includedIn rdf:type owl:ObjectProperty ;
+            owl:inverseOf :includes ;
+            rdfs:domain :Package ;
+            rdfs:range :Application .
+
+:includes rdf:type owl:ObjectProperty ;
+          rdfs:domain :Application ;
+          rdfs:range :Package .
+
+#################################################################
+# Properties
+#################################################################
+
+
+:name rdf:type owl:DatatypeProperty ,
+      owl:FunctionalProperty ;
+      rdfs:range xsd:string .
+
+:description rdf:type owl:DatatypeProperty ,
+             owl:FunctionalProperty ;
+             rdfs:range xsd:string .
+
+:deployedOn rdf:type owl:DatatypeProperty ,
+            owl:FunctionalProperty ;
+            rdfs:range xsd:dateTime .
+
+:version rdf:type owl:DatatypeProperty ,
+         owl:FunctionalProperty ;
+         rdfs:range xsd:string .
+
+
+
+This ontology was built with https://protege.stanford.edu/ ontology editor.
+
+Data
+The graph is populated with some sample data described by the following RDF statements:
+:hello-world rdf:type :Application ;
+    :name "Hello World"^^xsd:string ;
+    :description "Hello World Application"^^xsd:string .
+
+:by-by-world rdf:type :Application ;
+    :name "By By World"^^xsd:string ;
+    :description "By By Application"^^xsd:string .
+
+:k3d-cluster rdf:type :Host ;
+    :name "K3d cluster"^^xsd:string ;
+    :description "Local K3d cluster"^^xsd:string .
+
+:aks-cluster rdf:type :Host ;
+    :name "AKS cluster"^^xsd:string ;
+    :description "AKS cluster in the cloud"^^xsd:string .
+
+:common-utils-1.0.0 rdf:type :Package ;
+    :name "Common Utils"^^xsd:string ;
+    :description "Common Utils Package"^^xsd:string ;
+    :version "1.0.0"^^xsd:string .
+
+:ui-tools rdf:type :Package ;
+    :name "UI Tools"^^xsd:string ;
+    :description "UI Tools"^^xsd:string ;
+    :version "1.0.1"^^xsd:string .
+
+:easy-to-hack rdf:type :Vulnerability;
+    :name "Easy to hack"^^xsd:string ;
+    :description "Easy to hack vulnerability"^^xsd:string; 
+
+:hello-world :deployedTo :k3d-cluster .
+:hello-world :deployedTo :aks-cluster .
+:by-by-world :deployedTo :aks-cluster .
+
+<< :hello-world :deployedTo :k3d-cluster >> :deployedOn "2020-02-11"^^xsd:date .
+<< :hello-world :deployedTo :aks-cluster >> :deployedOn "2020-03-13"^^xsd:date . 
+
+<< :by-by-world :deployedTo :aks-cluster >> :deployedOn "2020-04-01"^^xsd:date .
+
+:hello-world :includes :common-utils-1.0.0 . 
+:hello-world :includes :ui-tools . 
+
+:by-by-world :includes :common-utils-1.0.0 . 
+
+:easy-to-hack :exposedIn :common-utils-1.0.0 .
+
+
+
+
+Inferencing
+The following diagram represents the knowledge graph with the sample data, that we have defined with RDF statements. As a matter of fact, the diagram contains more. Once the data has been inserted in the database, GraphDB has automatically dug out some new knowledge out of the explicit data and ontology. For example, we have never mentioned explicitly in the RDF statements that "ui-tools" package is "included" in "hello-world" application. We just specified that "hello-world" "includes" "ui-tools" package. But the ontology states that if A "includes" B, then B is "included in" A. Another new knowledge example is that "common-utils-1.0.0" package and "hello-world" and "by-by-world" applications are marked as Vulnerable. We have never stated these facts explicitly, they were derived from the ontology. It reasons that "common-utils-1.0.0" package is vulnerable because it's exposed to "easy-to-hack" vulnerability and both applications are vulnerable because they include "common-utils-1.0.0" package, which is vulnerable. All these new knowledge facts have been inferenced by GraphDB using forward (write-time) chaining and saved to the persistence storage.
+
+
+
+
+Quering and updating
+The following examples give a taste of what SPARQL expressions look like to query and update data in the graph:
+### Show all vulnerabilities, clusters exposed to it and when it happened first
+
+prefix :<http://application-inventory/>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+
+select ?v ?c (MIN(?d) as ?introducedAt) 
+where {
+  << ?a :deployedTo ?c >> :deployedOn ?d .
+  ?v :exposedIn ?p .
+  ?p :includedIn ?a . 
+}
+group by ?v ?c
+
+
+
+### Insert new host
+
+prefix :<http://application-inventory/>
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+
+insert data {
+  :new-cluster rdf:type :Host ;
+    :name "New cluster"^^xsd:string ;
+    :description "New cluster"^^xsd:string .
+}
+
+
+
+### Delete host "New cluster"
+
+prefix :<http://application-inventory/>
+
+DELETE WHERE { ?object :name 'New cluster' ;
+              ?property ?value }
+
+
+
+
+The knowledge graph can be queried with the very same SPARQL statements via REST API endpoint:
+curl -X POST -H 'Content-Type: application/sparql-query' -H 'Accept: application/sparql-results+json' http://REST_ENDPOINT/repositories/test5 -d '
+prefix :<http://application-inventory/>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
+
+select ?v ?c (MIN(?d) as ?introducedAt) 
+where {
+<< ?a :deployedTo ?c >> :deployedOn ?d .
+?v :exposedIn ?p .
+?p :includedIn ?a . 
+}
+group by ?v ?c
+'
+
+This API call returns the following response:
+{
+  "head" : {
+    "vars" : [
+      "v",
+      "c",
+      "introducedAt"
+    ]
+  },
+  "results" : {
+    "bindings" : [
+      {
+        "v" : {
+          "type" : "uri",
+          "value" : "http://application-inventory/easy-to-hack"
+        },
+        "c" : {
+          "type" : "uri",
+          "value" : "http://application-inventory/k3d-cluster"
+        },
+        "introducedAt" : {
+          "datatype" : "http://www.w3.org/2001/XMLSchema#date",
+          "type" : "literal",
+          "value" : "2020-02-11"
+        }
+      },
+      {
+        "v" : {
+          "type" : "uri",
+          "value" : "http://application-inventory/easy-to-hack"
+        },
+        "c" : {
+          "type" : "uri",
+          "value" : "http://application-inventory/aks-cluster"
+        },
+        "introducedAt" : {
+          "datatype" : "http://www.w3.org/2001/XMLSchema#date",
+          "type" : "literal",
+          "value" : "2020-03-13"
+        }
+      }
+    ]
+  }
+}
+
+
+
+GraphDB automatically generates a GraphQL schema based on the graph ontology and exposes a GraphQL endpoint. The endpoint can be hit with both read only and mutating queries. For example, this GraphQL query returns all vulnerabilities and hosts exposed to it:
+query vulnerableClusters (where: {deployedTo: {}}) {
+    Vulnerable {
+        name
+        deployedTo {
+            host{
+                name
+            }
+            deployedAt
+        }
+    }
+}
+
+
+
+Natural language queries
+Since the knowledge graph ontology is defined with standard languages such as RDFS and OWL, it is understood by LLM models. We have experimented with GPT-3.5 and GPT-4.0 models and both demonstrated impressive results with generating SPARQL queries in response to the natural language requests. This is important that the model was aware of ontology only, it didn't have access to the actual data. We simply fed the ontology to the LLM model as a prompt like this:
+
+You are an AI expert on RDF-star databases, SPARQL-star queries and OWL ontologies. 
+You have an OWL ontology, describing a knowledge graph with the information about applications, what packages they consist of, 
+what vulnerabilities they have and to what hosts they are deployed. You will be asked to generate SPARQL-star queries. Return only query statements without explanation.
+Use the ontology bellow:
+
+<ONTOLOGY STATEMENTS>
+
+
+
+
+With that in place, the LLM model was able to generate correct SPARQL queries on the following asks:
+Q: Generate a query to list all applications
+A:  
+SELECT ?application 
+WHERE { 
+?application rdf:type :Application . 
+} 
+
+Q: I want to list all applications and what hosts they are deployed to and when
+A:
+SELECT ?application ?host ?deployedOn 
+WHERE { 
+?application rdf:type :Application . 
+<< ?application :deployedTo ?host >> :deployedOn ?deployedOn . 
+} 
+
+Q: I want to list all vulnerabilities and on what hosts they have been deployed to and when it happened the first time
+A:
+SELECT ?vulnerability ?host (MIN(?deployedOn) AS ?firstDeployedOn) 
+WHERE { 
+?vulnerability rdf:type :Vulnerability . 
+?package :exposedTo ?vulnerability . 
+?application :includes ?package . 
+<< ?application :deployedTo ?host >> :deployedOn ?deployedOn . 
+} 
+GROUP BY ?vulnerability ?host 
+
+Q: There is an application "Kalypso" which is deployed to host "big-cluster" on 02/01/20204. The application uses "common-util-1.0.0" package. 
+Generate a Sparql-star query to insert this data in the graph.
+A: 
+INSERT { 
+  :Kalypso rdf:type :Application ; 
+           :name "Kalypso" ; 
+           :includes :common-util-1.0.0 . 
+  :common-util-1.0.0 rdf:type :Package ; 
+                     :name "common-util-1.0.0" . 
+  :big-cluster rdf:type :Host ; 
+               :name "big-cluster" . 
+  << :Kalypso :deployedTo :big-cluster >> :deployedOn "2024-02-01"^^xsd:dateTime . 
+} 
+WHERE { 
+  FILTER NOT EXISTS { :Kalypso rdf:type :Application . } 
+  FILTER NOT EXISTS { :common-util-1.0.0 rdf:type :Package . } 
+  FILTER NOT EXISTS { :big-cluster rdf:type :Host . } 
+} 
+
+This experiment clearly demonstrates the feasibility of building an AI service for the natural language queries processing, implemented with Semantic Kernel or similar frameworks.
+
+Data provenance
+Prov-O ontology language brings a standard vocabulary to enrich the data with the provenance information. This vocabulary is understood across systems and LLM models.
+We can enrich the knowledge graph ontology with these statements, describing that any vulnerability is reported by a security agent according to the scanning results:
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+:Vulnerability rdf:type owl:Class ;
+               rdfs:subClassOf prov:Entity ;
+               prov:wasGeneratedBy  :VulnerabilityReportingActivity .
+
+:VulnerabilityReportingActivity rdf:type owl:Class ;
+                                rdfs:subClassOf prov:Activity; 
+                                prov:wasAssociatedWith :SecurityAgent;
+                                prov:used  :VulnerabilityScanningResults .
+
+:SecurityAgent rdf:type owl:Class ;                            
+               rdfs:subClassOf prov:Agent .      
+
+:VulnerabilityScanningResults rdf:type owl:Class ;                            
+                              rdfs:subClassOf prov:Entity .
+
+
+
+
+With that in place, we can ask the LLM model with the following question:
+Q: I want to know what hosts are vulnerable and where this information is coming from
+A:
+SELECT DISTINCT ?host ?vulnerability ?reportingActivity ?securityAgent ?scanningResults 
+WHERE { 
+  ?host rdf:type :Host . 
+  ?application :deployedTo ?host . 
+  ?application :includes ?package . 
+  ?package :exposedTo ?vulnerability . 
+  ?vulnerability prov:wasGeneratedBy ?reportingActivity . 
+  ?reportingActivity prov:wasAssociatedWith ?securityAgent ; 
+                     prov:used ?scanningResults . 
+} 
+
