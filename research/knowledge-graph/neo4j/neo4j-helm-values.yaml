@@ -1,0 +1,21 @@
+neo4j:
+  name: "neo4j"
+  password: "knowledge" #gitleaks:allow
+  acceptLicenseAgreement: "yes"
+  resources:
+    cpu: "0.5"
+    memory: "2Gi"
+
+volumes:
+  data:
+    mode: "dynamic"
+    dynamic:
+      # * managed-csi-premium provisions premium SSD disks (recommended)
+      # * managed-csi provisions standard SSD backed disks
+      storageClassName: managed-csi
+
+image:
+  customImage: "kaizentm/neo4j-neosemantics:5.17.0-2"
+
+config:
+  dbms.unmanaged_extension_classes: "n10s.endpoint=/rdf"

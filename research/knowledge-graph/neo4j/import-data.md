@@ -1,0 +1,74 @@
+CALL n10s.rdf.preview.inline(
+  '
+@prefix : <http://application-inventory/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://application-inventory/> .
+
+
+:hello-world rdf:type :Application ;
+    :name "Hello World"^^xsd:string ;
+    :description "Hello World Application"^^xsd:string .
+
+:by-by-world rdf:type :Application ;
+    :name "By By World"^^xsd:string ;
+    :description "By By Application"^^xsd:string .
+
+:k3d-cluster rdf:type :Host ;
+    :name "K3d cluster"^^xsd:string ;
+    :description "Local K3d cluster"^^xsd:string .
+
+:aks-cluster rdf:type :Host ;
+    :name "AKS cluster"^^xsd:string ;
+    :description "AKS cluster in the cloud"^^xsd:string .
+
+:common-utils-1.0.0 rdf:type :Package ;
+    :name "Common Utils"^^xsd:string ;
+    :description "Common Utils Package"^^xsd:string ;
+    :version "1.0.0"^^xsd:string .
+
+:ui-tools rdf:type :Package ;
+    :name "UI Tools"^^xsd:string ;
+    :description "UI Tools"^^xsd:string ;
+    :version "1.0.1"^^xsd:string .
+
+:easy-to-hack rdf:type :Vulnerability;
+    :name "Easy to hack"^^xsd:string ;
+    :description "Easy to hack vulnerability"^^xsd:string; 
+    prov:wasGeneratedBy  :monthly-reporting-activity .
+
+:hello-world :deployedTo :k3d-cluster .
+:hello-world :deployedTo :aks-cluster .
+:by-by-world :deployedTo :aks-cluster .
+
+<< :hello-world :deployedTo :k3d-cluster >>  :deployedOn "2020-02-11"^^xsd:date .
+<< :hello-world :deployedTo :aks-cluster >>  :deployedOn "2020-03-13"^^xsd:date . 
+
+<< :by-by-world :deployedTo :aks-cluster >>  :deployedOn "2020-04-01"^^xsd:date .
+
+:hello-world :includes :common-utils-1.0.0 . 
+:hello-world :includes :ui-tools . 
+
+:by-by-world :includes :common-utils-1.0.0 . 
+
+:easy-to-hack :exposedIn :common-utils-1.0.0 .
+
+:monthly-reporting-activity a :VulnerabilityReportingActivity ;
+    :name "Monthly Reporting Activity"^^xsd:string ;
+    :description "Monthly Reporting Activity"^^xsd:string ;
+    prov:wasAssociatedWith :darek;
+    prov:used  :monthly-scanning-results .
+
+:darek a :SecurityAgent ;
+    :name "Darek"^^xsd:string . 
+
+:monthly-scanning-results a :VulnerabilityScanningResults ;                            
+                          :name "Monthly Scanning Results"^^xsd:string . 
+
+
+',
+  'Turtle'
+)    

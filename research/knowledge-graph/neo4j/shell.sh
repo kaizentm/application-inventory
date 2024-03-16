@@ -1,0 +1,10 @@
+#!/bin/bash
+
+DEST_DB_KUBERNETES_NAMESPACE=neo4j
+DEST_DB_POD_NAME=neo4j-0
+DEST_DB_NAME=neo4j
+DEST_DB_USER_NAME=neo4j
+DEST_DB_PASS=knowledge
+
+
+kubectl exec -n ${DEST_DB_KUBERNETES_NAMESPACE} -it ${DEST_DB_POD_NAME} -- cypher-shell -u ${DEST_DB_USER_NAME} -p ${DEST_DB_PASS} -d ${DEST_DB_NAME}
