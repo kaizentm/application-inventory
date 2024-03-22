@@ -1,4 +1,4 @@
-@prefix : <http://application-inventory/> .
+@prefix app: <http://application-inventory/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
@@ -14,34 +14,34 @@
 #################################################################
 
 ###  http://application-inventory#exposedTo
-:exposedTo rdf:type owl:ObjectProperty ;
-           owl:inverseOf :exposedIn ;
-           rdfs:domain :Package ;
-           rdfs:range :Vulnerability .
+app:exposedTo rdf:type owl:ObjectProperty ;
+           owl:inverseOf app:exposedIn ;
+           rdfs:domain app:Package ;
+           rdfs:range app:Vulnerability .
 
 
 ###  http://application-inventory/deployedTo
-:deployedTo rdf:type owl:ObjectProperty ;
-            rdfs:domain :Application ;
-            rdfs:range :Host .
+app:deployedTo rdf:type owl:ObjectProperty ;
+            rdfs:domain app:Application ;
+            rdfs:range app:Host .
 
 ###  http://application-inventory/exposedIn
-:exposedIn rdf:type owl:ObjectProperty ;
-           rdfs:domain :Vulnerability ;
-           rdfs:range :Package .
+app:exposedIn rdf:type owl:ObjectProperty ;
+              rdfs:domain app:Vulnerability ;
+              rdfs:range app:Package .
 
 
 ###  http://application-inventory/includedIn
-:includedIn rdf:type owl:ObjectProperty ;
-            owl:inverseOf :includes ;
-            rdfs:domain :Package ;
-            rdfs:range :Application .
+app:includedIn rdf:type owl:ObjectProperty ;
+               owl:inverseOf app:includes ;
+               rdfs:domain app:Package ;
+               rdfs:range app:Application .
 
 
 ###  http://application-inventory/includes
-:includes rdf:type owl:ObjectProperty ;
-          rdfs:domain :Application ;
-          rdfs:range :Package .
+app:includes rdf:type owl:ObjectProperty ;
+             rdfs:domain app:Application ;
+             rdfs:range app:Package .
 
 
 #################################################################
@@ -49,24 +49,28 @@
 #################################################################
 
 ###  http://application-inventory/deployedOn
-:deployedOn rdf:type owl:DatatypeProperty ,
-                     owl:FunctionalProperty ;
+app:deployedOn rdf:type owl:DatatypeProperty ,
+                     owl:FunctionalProperty ;            
+            rdfs:domain << app:Application app:deployedTo app:Host >> ;                     
             rdfs:range xsd:dateTime .
 
 
 ###  http://application-inventory/description
-:description rdf:type owl:DatatypeProperty ,
+app:description rdf:type owl:DatatypeProperty ,
                       owl:FunctionalProperty ;
+             rdfs:domain app:Thing ; 
              rdfs:range xsd:string .
 
 ###  http://application-inventory/version
-:version rdf:type owl:DatatypeProperty ,
+app:version rdf:type owl:DatatypeProperty ,
                   owl:FunctionalProperty ;
+          rdfs:domain app:Package ;
           rdfs:range xsd:string .
 
 ###  http://application-inventory/name
-:name rdf:type owl:DatatypeProperty ,
+app:name rdf:type owl:DatatypeProperty ,
                owl:FunctionalProperty ;
+      rdfs:domain app:Thing ;                                    
       rdfs:range xsd:string .
 
 
@@ -74,58 +78,56 @@
 #    Classes
 #################################################################
 
+
 ###  http://application-inventory/Vulnerable
-:Vulnerable owl:equivalentClass [
+app:Vulnerable owl:equivalentClass [
     owl:unionOf  ( 
                   [rdf:type owl:Restriction ;
-                  owl:onProperty :exposedTo ;
-                  owl:someValuesFrom :Vulnerability]
+                  owl:onProperty app:exposedTo ;
+                  owl:someValuesFrom app:Vulnerability]
 
                   [rdf:type owl:Restriction ;
-                  owl:onProperty :includes ;
-                  owl:someValuesFrom :Vulnerable]
+                  owl:onProperty app:includes ;
+                  owl:someValuesFrom app:Vulnerable]
     ) 
-] .
+];
+rdf:type owl:Class;
+rdfs:subClassOf app:Thing .
 
 
 ###  http://application-inventory/Application
-:Application rdf:type owl:Class . 
+app:Application rdf:type owl:Class;
+             rdfs:subClassOf app:Thing .
 
 
 ###  http://application-inventory/Host
-:Host rdf:type owl:Class .
+app:Host rdf:type owl:Class;
+      rdfs:subClassOf app:Thing .
 
 
 ###  http://application-inventory/Package
-:Package rdf:type owl:Class .
+app:Package rdf:type owl:Class;
+         rdfs:subClassOf app:Thing .
 
 
 ###  http://application-inventory/Vulnerability
-:Vulnerability rdf:type owl:Class ;
+app:Vulnerability rdf:type owl:Class ;
                rdfs:subClassOf prov:Entity ;
-               prov:wasGeneratedBy  :VulnerabilityReportingActivity .
+               prov:wasGeneratedBy  app:VulnerabilityReportingActivity .
 
-:VulnerabilityReportingActivity rdf:type owl:Class ;
+app:VulnerabilityReportingActivity rdf:type owl:Class ;
                                 rdfs:subClassOf prov:Activity; 
-                                prov:wasAssociatedWith :SecurityAgent;
-                                prov:used  :VulnerabilityScanningResults .
+                                prov:wasAssociatedWith app:SecurityAgent;
+                                prov:used  app:VulnerabilityScanningResults .
 
-:SecurityAgent rdf:type owl:Class ;                            
+app:SecurityAgent rdf:type owl:Class ;                            
                rdfs:subClassOf prov:Agent .      
 
-:VulnerabilityScanningResults rdf:type owl:Class ;                            
+app:VulnerabilityScanningResults rdf:type owl:Class ;                            
                               rdfs:subClassOf prov:Entity .
 
-###  http://www.w3.org/2002/07/owl#Thing
-owl:Thing owl:equivalentClass [ rdf:type owl:Restriction ;
-                                owl:onProperty :description ;
-                                owl:someValuesFrom xsd:string
-                              ] ,
-                              [ rdf:type owl:Restriction ;
-                                owl:onProperty :name ;
-                                owl:minQualifiedCardinality "1"^^xsd:nonNegativeInteger ;
-                                owl:onDataRange xsd:string
-                              ] .
+app:Thing rdf:type owl:Class .
+
 
 
 ###  Generated by the OWL API (version 4.5.26.2023-07-17T20:34:13Z) https://github.com/owlcs/owlapi

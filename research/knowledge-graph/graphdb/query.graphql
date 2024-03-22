@@ -1,14 +1,33 @@
-#Show all vulnerabilities, clusters exposed to it and when it happened 
-query vulnerableClusters (where: {deployedTo: {}}) {
-    Vulnerable {
-        name
-        deployedTo {
-            host{
-                name
-            }
-            deployedAt
-        }
-    }
+query vulnerables {
+  vulnerable {
+    app_name
+    id
+  }
 }
 
+
+query applications {
+  application {
+    app_name
+    deployedTo {
+      description
+      app_name
+    }
+  }
+}
+
+query vulnerableClusters {
+  application(where: {type: {IN: "http://application-inventory/Vulnerable"}}) {
+    app_name
+    deployedTo {
+      app_name
+    }
+  }
+}
+
+
 See https://platform.ontotext.com/semantic-objects/tutorials/graphql-query.html
+
+Looks like SOML doesn't support properties of objectProperties, in other words it doesn't support RDF-star. 
+So there is no way to query "deployedOn" with GraphQL. This property is just lost.
+To be fair, there is no way to define RDF-star-style properties of relations in OWL either. 

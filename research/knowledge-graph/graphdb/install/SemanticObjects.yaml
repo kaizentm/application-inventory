@@ -16,29 +16,38 @@ spec:
     spec:
       containers:
       - name: semantic-objects
-        image: ontotext/platform-soaas-service:4.1.0
+        image: ontotext/platform-soaas-service:4.1.7
         ports:
         - containerPort: 8080
         env:
         - name: SOAAS_JAVA_OPTS
           value: "-Xmx2g -Xms512m"
         - name: application.name
-          value: "soaas"
+          value: "the-nice-one"
         - name: sparql.endpoint.address
-          value: "http://graphdb:7200/"  
+          value: "http://graphdb-node:7200/"  
         - name: sparql.endpoint.repository
-          value: "soaas"
+          value: "the-nice-one"
         - name: storage.location
           value: "/var/lib/soaas"
-        - name: platform.license.file
-          value: "/PLATFORM.license"
+        # - name: platform.license.base64
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: platform-license
+        #       key: SEMOBJECTS.license
         volumeMounts:
         - mountPath: /var/lib/soaas
           name: soaas-data
+        # - name: license-volume
+        #   readOnly: true
+        #   mountPath: "/etc/license"          
       volumes:
       - name: soaas-data
         persistentVolumeClaim:
           claimName: soaas-data-pvc
+      # - name: license-volume
+      #   secret:
+      #     secretName: platform-license          
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
