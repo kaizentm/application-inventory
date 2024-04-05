@@ -1,0 +1,140 @@
+id: /soml/app
+prefixes:
+  app: http://application-inventory/
+  owl: http://www.w3.org/2002/07/owl#
+  prov: http://www.w3.org/ns/prov#
+  rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns#
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+  xml: http://www.w3.org/XML/1998/namespace
+  xsd: http://www.w3.org/2001/XMLSchema#
+specialPrefixes:
+  vocab_prefix: app
+  ontology_iri: http://application-inventory
+  vocab_iri: http://application-inventory/
+properties:
+  app:name:
+    kind: literal
+    range: string
+    rdfProp: app:name
+  deployedOn:
+    kind: literal
+    range: date
+    rdfProp: app:deployedOn    
+  deployedTo:
+    kind: object
+    max: inf
+    range: Host
+    rdfProp: app:deployedTo
+  deployed:
+    kind: object
+    max: inf
+    range: Deployment
+  description:
+    kind: literal
+    range: string
+    rdfProp: app:description
+  exposedIn:
+    inverseOf: exposedTo
+    kind: object
+    max: inf
+    range: Package
+    rdfProp: app:exposedIn
+  exposedTo:
+    inverseOf: exposedIn
+    kind: object
+    max: inf
+    range: Vulnerability
+    rdfProp: app:exposedTo
+  includedIn:
+    inverseOf: includes
+    kind: object
+    max: inf
+    range: Application
+    rdfProp: app:includedIn
+  includes:
+    inverseOf: includedIn
+    kind: object
+    max: inf
+    range: Package
+    rdfProp: app:includes
+  version:
+    kind: literal
+    range: string
+    rdfProp: app:version
+objects:
+  Deployment:
+    inherits: ThingInterface
+    props:
+      deployedTo:
+        rdfProp: |
+          BIND(STRBEFORE(STR(?_subject), "-on-") AS ?__hostId ) .
+          ?_value ?__p ?__s .
+          FILTER(STR(?_value) = ?__hostId)      
+      deployedOn:
+        rdfProp: |
+          BIND(STRAFTER(STR(?_subject), "-on-") AS ?_value ).
+      
+  Application:
+    inherits: ThingInterface
+    props:
+      deployedTo: {}
+      deployed:
+        rdfProp: |
+           <<?_subject app:deployedTo ?__deployedTo >> app:deployedOn ?__deployedOn .
+           BIND( IRI(CONCAT(STR(?__deployedTo),"-on-",STR(?__deployedOn))) AS ?_value ).
+      includes: {}
+    type: app:Application
+  Host:
+    inherits: ThingInterface
+    type: app:Host
+  Package:
+    inherits: ThingInterface
+    props:
+      exposedTo: {}
+      includedIn: {}
+      version: {}
+    type: app:Package
+  SecurityAgent:
+    inherits: prov:AgentInterface
+    type: app:SecurityAgent
+  Thing:
+    inherits: ThingInterface
+    type: app:Thing
+  ThingInterface:
+    descr: Abstract superclass of Thing
+    kind: abstract
+    props:
+      app:name: {}
+      description: {}
+  Vulnerability:
+    inherits: prov:EntityInterface
+    props:
+      exposedIn: {}
+    type: app:Vulnerability
+  VulnerabilityReportingActivity:
+    inherits: prov:ActivityInterface
+    type: app:VulnerabilityReportingActivity
+  VulnerabilityScanningResults:
+    inherits: prov:EntityInterface
+    type: app:VulnerabilityScanningResults
+  Vulnerable:
+    inherits: ThingInterface
+    type: app:Vulnerable
+  prov:Activity:
+    inherits: prov:ActivityInterface
+    type: prov:Activity
+  prov:ActivityInterface:
+    descr: Abstract superclass of prov:Activity
+    kind: abstract
+  prov:Agent:
+    inherits: prov:AgentInterface
+    type: prov:Agent
+  prov:AgentInterface:
+    descr: Abstract superclass of prov:Agent
+    kind: abstract
+  prov:Entity:
+    inherits: prov:EntityInterface
+    type: prov:Entity
+  prov:EntityInterface:
+    descr: Abstract superclass of prov:Entity
+    kind: abstract

@@ -138,6 +138,7 @@ owl:Thing owl:equivalentClass [ rdf:type owl:Restriction ;
 
 
 
+
 Queries:
 - Generate a query to list all applications
 - I want to list all applications and what hosts they are deployed to and when.
