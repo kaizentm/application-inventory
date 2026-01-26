@@ -1,0 +1,602 @@
+@prefix app: <http://material-inventory/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://material-inventory/> .
+
+#################################################################
+#    Sample Data - Material Inventory Knowledge Graph
+#    Generated from: Inventory Data Table - January 16, 2026
+#################################################################
+
+#################################################################
+#    Plants and Organizational Entities
+#################################################################
+
+app:Plant_2040 a app:Plant ;
+    app:plantCode "2040" ;
+    rdfs:label "Plant 2040" .
+
+app:ProfitCenter_1001011656 a app:ProfitCenter ;
+    app:profitCenterCode "1001011656" ;
+    rdfs:label "Testing & Subsea Manufacturing - PC1" .
+
+app:ProfitCenter_1002411383 a app:ProfitCenter ;
+    app:profitCenterCode "1002411383" ;
+    rdfs:label "Testing & Subsea Manufacturing - PC2" .
+
+app:ProfitCenter_1002411670 a app:ProfitCenter ;
+    app:profitCenterCode "1002411670" ;
+    rdfs:label "Testing & Subsea Manufacturing - PC3" .
+
+app:ProfitCenter_1002412461 a app:ProfitCenter ;
+    app:profitCenterCode "1002412461" ;
+    rdfs:label "Testing & Subsea Manufacturing - PC4" .
+
+app:MRPController_ATP a app:MRPController ;
+    app:mrpControllerCode "ATP" ;
+    rdfs:label "MRP Controller ATP" .
+
+app:MRPController_40P a app:MRPController ;
+    app:mrpControllerCode "40P" ;
+    rdfs:label "MRP Controller 40P" .
+
+app:MRPController_GBC a app:MRPController ;
+    app:mrpControllerCode "GBC" ;
+    rdfs:label "MRP Controller GBC" .
+
+app:MRPController_R12 a app:MRPController ;
+    app:mrpControllerCode "R12" ;
+    rdfs:label "MRP Controller R12" .
+
+app:MRPController_BK a app:MRPController ;
+    app:mrpControllerCode "BK" ;
+    rdfs:label "MRP Controller BK" .
+
+app:MRPController_41P a app:MRPController ;
+    app:mrpControllerCode "41P" ;
+    rdfs:label "MRP Controller 41P" .
+
+app:MRPController_45P a app:MRPController ;
+    app:mrpControllerCode "45P" ;
+    rdfs:label "MRP Controller 45P" .
+
+#################################################################
+#    Materials - Rupture Discs
+#################################################################
+
+app:Material_103348 a app:Material ;
+    app:materialNumber "103348" ;
+    app:materialDescription "DISC - RUPTURE - 18.5 K - 400 F - REF" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_ATP ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:redeploymentFlag "X" ;
+    app:onHandInventory 3 ;
+    app:onHandInventoryValue 1653.15 ;
+    app:strandedInventory 3 ;
+    app:strandedInventoryValue 1653.15 ;
+    app:slowMoveQuantity 3 ;
+    app:slowMoveValue 1653.15 ;
+    app:lastUsedDate "2025-12-26"^^xsd:date ;
+    app:dio 273.75 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "Rupture Disc 18.5K 400F" .
+
+app:Material_103349 a app:Material ;
+    app:materialNumber "103349" ;
+    app:materialDescription "DISC - RUPTURE - 20.5 K - 450 F - REF" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_40P ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:redeploymentFlag "X" ;
+    app:onHandInventory 4 ;
+    app:onHandInventoryValue 2553.00 ;
+    app:strandedInventory 4 ;
+    app:strandedInventoryValue 2553.00 ;
+    app:slowMoveQuantity 4 ;
+    app:slowMoveValue 2553.00 ;
+    app:lastUsedDate "2024-07-17"^^xsd:date ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "Rupture Disc 20.5K 450F" .
+
+#################################################################
+#    Materials - O-Rings (NBR NIT 90 DURO)
+#################################################################
+
+app:Material_100001924 a app:Material ;
+    app:materialNumber "100001924" ;
+    app:materialDescription "O-RING,NBR NIT 90 DURO,1 3/16 X 1 X 3/32" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_45P ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:redeploymentFlag "X" ;
+    app:onHandInventory 34 ;
+    app:onHandInventoryValue 6.10 ;
+    app:strandedInventory 34 ;
+    app:strandedInventoryValue 6.09858 ;
+    app:slowMoveQuantity 33 ;
+    app:slowMoveValue 5.91921 ;
+    app:lastUsedDate "2024-09-30"^^xsd:date ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "O-Ring NBR 1-3/16\" x 1\" x 3/32\"" .
+
+app:Material_100001941 a app:Material ;
+    app:materialNumber "100001941" ;
+    app:materialDescription "O-RING,NBR NIT 90 DURO,3/8 X 1/4 X 1/16" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_40P ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:onHandInventory 38 ;
+    app:onHandInventoryValue 3.26 ;
+    app:totalDemand 11 ;
+    app:sixMonthTotalDemand 11 ;
+    app:strandedInventory 15 ;
+    app:strandedInventoryValue 1.287 ;
+    app:lastUsedDate "2026-01-13"^^xsd:date ;
+    app:nextRequirementDate "2026-01-28"^^xsd:date ;
+    app:dio 36.31 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 13.0 ;
+    rdfs:label "O-Ring NBR 3/8\" x 1/4\" x 1/16\"" .
+
+app:Material_100001942 a app:Material ;
+    app:materialNumber "100001942" ;
+    app:materialDescription "O-RING,NBR NIT 90 DURO,7/16 X 5/16 X 1/1" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_45P ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:onHandInventory 135 ;
+    app:onHandInventoryValue 11.30 ;
+    app:strandedInventory 208 ;
+    app:strandedInventoryValue 17.41168 ;
+    app:lastUsedDate "2026-01-14"^^xsd:date ;
+    app:dio 2372.5 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "O-Ring NBR 7/16\" x 5/16\"" .
+
+app:Material_100001949 a app:Material ;
+    app:materialNumber "100001949" ;
+    app:materialDescription "O-RING,NBR NIT 90 DURO,1 1/4 X 1 X 1/8 5" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_40P ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:onHandInventory 94 ;
+    app:onHandInventoryValue 15.74 ;
+    app:strandedInventory 94 ;
+    app:strandedInventoryValue 15.73654 ;
+    app:lastUsedDate "2025-05-16"^^xsd:date ;
+    app:dio 1106.77 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "O-Ring NBR 1-1/4\" x 1\" x 1/8\"" .
+
+#################################################################
+#    Materials - Nozzles (Smith Series 70)
+#################################################################
+
+app:Material_889077 a app:Material ;
+    app:materialNumber "889077" ;
+    app:materialDescription "NOZ,SMITH SER 70,11/32 SZ,0.093 TOTAL FL" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_GBC ;
+    app:belongsToProfitCenter app:ProfitCenter_1002411383 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:onHandInventory 1 ;
+    app:onHandInventoryValue 100.71 ;
+    app:strandedInventory 1 ;
+    app:strandedInventoryValue 100.71 ;
+    app:slowMoveQuantity 1 ;
+    app:slowMoveValue 100.71 ;
+    app:lastUsedDate "2025-09-11"^^xsd:date ;
+    app:dio 365.0 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "Nozzle Smith Series 70 - 11/32" .
+
+app:Material_889078 a app:Material ;
+    app:materialNumber "889078" ;
+    app:materialDescription "NOZ,SMITH SER 70,12/32 SZ,0.110 TOTAL FL" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_GBC ;
+    app:belongsToProfitCenter app:ProfitCenter_1002411383 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:onHandInventory 2 ;
+    app:onHandInventoryValue 201.42 ;
+    app:strandedInventory 2 ;
+    app:strandedInventoryValue 201.42 ;
+    app:lastUsedDate "2025-11-17"^^xsd:date ;
+    app:dio 730.0 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "Nozzle Smith Series 70 - 12/32" .
+
+app:Material_889079 a app:Material ;
+    app:materialNumber "889079" ;
+    app:materialDescription "NOZ,SMITH SER 70,13/32 SZ,0.130 TOTAL FL" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_GBC ;
+    app:belongsToProfitCenter app:ProfitCenter_1002411383 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:onHandInventory 2 ;
+    app:onHandInventoryValue 201.42 ;
+    app:strandedInventory 2 ;
+    app:strandedInventoryValue 201.42 ;
+    app:slowMoveQuantity 2 ;
+    app:slowMoveValue 201.42 ;
+    app:lastUsedDate "2024-05-07"^^xsd:date ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "Nozzle Smith Series 70 - 13/32" .
+
+#################################################################
+#    Materials - Rods
+#################################################################
+
+app:Material_1226200 a app:Material ;
+    app:materialNumber "1226200" ;
+    app:materialDescription "ROD,12.000,INC 718 RT HT 140 MY" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_BK ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:redeploymentFlag "X" ;
+    app:onHandInventory 221 ;
+    app:onHandInventoryValue 296207.62 ;
+    app:totalDemand 21 ;
+    app:sixMonthTotalDemand 21 ;
+    app:strandedInventory 200 ;
+    app:strandedInventoryValue 267686.9008 ;
+    app:lastUsedDate "2025-06-04"^^xsd:date ;
+    app:nextRequirementDate "2026-04-16"^^xsd:date ;
+    app:dio 282.78 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "Rod 12.000 INC 718" .
+
+app:Material_1226224 a app:Material ;
+    app:materialNumber "1226224" ;
+    app:materialDescription "ROD,15.000,INC 718 RT HT 140 MY" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_BK ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:redeploymentFlag "X" ;
+    app:onHandInventory 47 ;
+    app:onHandInventoryValue 98026.34 ;
+    app:totalDemand 17 ;
+    app:sixMonthTotalDemand 17 ;
+    app:strandedInventory 30 ;
+    app:strandedInventoryValue 62380.395 ;
+    app:lastUsedDate "2025-06-04"^^xsd:date ;
+    app:nextRequirementDate "2026-04-16"^^xsd:date ;
+    app:dio 169.37 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "Rod 15.000 INC 718" .
+
+#################################################################
+#    Materials - Other Components
+#################################################################
+
+app:Material_889091 a app:Material ;
+    app:materialNumber "889091" ;
+    app:materialDescription "O-RING,182X4,VITON,FOR 6-5/8" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_GBC ;
+    app:belongsToProfitCenter app:ProfitCenter_1002411383 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:onHandInventory 0 ;
+    app:onHandInventoryValue 0.00 ;
+    app:poQuantity 10 ;
+    app:totalDemand 10 ;
+    app:sixMonthTotalDemand 10 ;
+    app:nextRequirementDate "2026-02-06"^^xsd:date ;
+    app:nextPOReceiptDate "2026-02-27"^^xsd:date ;
+    app:dio 0.0 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "O-Ring VITON 182X4 6-5/8\"" .
+
+app:Material_748999 a app:Material ;
+    app:materialNumber "748999" ;
+    app:materialDescription "TBG,1.267 1.049,MP35N 169 MIN LGTH CD 51" ;
+    app:locatedInPlant app:Plant_2040 ;
+    app:managedByController app:MRPController_R12 ;
+    app:belongsToProfitCenter app:ProfitCenter_1001011656 ;
+    app:psl "Testing & Subsea Manufacturing" ;
+    app:redeploymentFlag "X" ;
+    app:onHandInventory 24785 ;
+    app:onHandInventoryValue 699419.10 ;
+    app:totalDemand 267 ;
+    app:sixMonthTotalDemand 267 ;
+    app:strandedInventory 24518 ;
+    app:strandedInventoryValue 691897.6214 ;
+    app:slowMoveQuantity 22437 ;
+    app:slowMoveValue 633172.14 ;
+    app:lastUsedDate "2026-01-08"^^xsd:date ;
+    app:nextRequirementDate "2026-01-12"^^xsd:date ;
+    app:dio 1158.03 ;
+    app:leadTime 0.0 ;
+    app:safetyStock 0.0 ;
+    rdfs:label "Tubing MP35N 1.267" .
+
+#################################################################
+#    Assemblies and Components
+#################################################################
+
+app:Assembly_PressureValve a app:Assembly ;
+    app:assemblyName "Pressure Relief Valve Assembly" ;
+    app:assemblyVersion "V1.2" ;
+    rdfs:label "Pressure Relief Valve Assembly" .
+
+app:Component_RuptureDisc a app:Component ;
+    app:componentName "Rupture Disc" ;
+    app:componentPosition "POS-001" ;
+    app:componentQuantity 1 ;
+    app:componentOf app:Assembly_PressureValve ;
+    app:canBeFilledBy app:Material_103348, app:Material_103349 ;
+    rdfs:label "Rupture Disc Component" .
+
+app:Assembly_PressureValve app:hasComponent app:Component_RuptureDisc .
+
+app:Assembly_HydraulicPump a app:Assembly ;
+    app:assemblyName "Hydraulic Pump Model HP-2000" ;
+    app:assemblyVersion "V2.5" ;
+    rdfs:label "Hydraulic Pump HP-2000" .
+
+app:Component_Seal_Primary a app:Component ;
+    app:componentName "Primary Seal" ;
+    app:componentPosition "SEAL-01" ;
+    app:componentQuantity 2 ;
+    app:componentOf app:Assembly_HydraulicPump ;
+    app:canBeFilledBy app:Material_100001941, app:Material_100001942, app:Material_100001949 ;
+    rdfs:label "Primary Seal Component" .
+
+app:Component_Seal_Secondary a app:Component ;
+    app:componentName "Secondary Seal" ;
+    app:componentPosition "SEAL-02" ;
+    app:componentQuantity 1 ;
+    app:componentOf app:Assembly_HydraulicPump ;
+    app:canBeFilledBy app:Material_889091, app:Material_100001924 ;
+    rdfs:label "Secondary Seal Component" .
+
+app:Assembly_HydraulicPump app:hasComponent app:Component_Seal_Primary, app:Component_Seal_Secondary .
+
+app:Assembly_NozzleBlock a app:Assembly ;
+    app:assemblyName "Flow Control Nozzle Block" ;
+    app:assemblyVersion "V1.0" ;
+    rdfs:label "Nozzle Block Assembly" .
+
+app:Component_ControlNozzle a app:Component ;
+    app:componentName "Control Nozzle" ;
+    app:componentPosition "NOZ-CTRL" ;
+    app:componentQuantity 1 ;
+    app:componentOf app:Assembly_NozzleBlock ;
+    app:canBeFilledBy app:Material_889077, app:Material_889078, app:Material_889079 ;
+    rdfs:label "Control Nozzle Component" .
+
+app:Assembly_NozzleBlock app:hasComponent app:Component_ControlNozzle .
+
+#################################################################
+#    Semantic Similarity Relationships
+#################################################################
+
+# O-Rings - NBR NIT 90 DURO series are similar
+app:Material_100001941 app:semanticallySimilarTo app:Material_100001942 .
+<< app:Material_100001941 app:semanticallySimilarTo app:Material_100001942 >> 
+    app:similarityScore 0.89 .
+
+app:Material_100001942 app:semanticallySimilarTo app:Material_100001949 .
+<< app:Material_100001942 app:semanticallySimilarTo app:Material_100001949 >> 
+    app:similarityScore 0.87 .
+
+app:Material_100001941 app:semanticallySimilarTo app:Material_100001949 .
+<< app:Material_100001941 app:semanticallySimilarTo app:Material_100001949 >> 
+    app:similarityScore 0.85 .
+
+app:Material_100001924 app:semanticallySimilarTo app:Material_100001941 .
+<< app:Material_100001924 app:semanticallySimilarTo app:Material_100001941 >> 
+    app:similarityScore 0.82 .
+
+# Rupture Discs are similar (different pressure ratings)
+app:Material_103348 app:semanticallySimilarTo app:Material_103349 .
+<< app:Material_103348 app:semanticallySimilarTo app:Material_103349 >> 
+    app:similarityScore 0.93 .
+
+# Nozzles - Smith Series 70 are similar (different sizes)
+app:Material_889077 app:semanticallySimilarTo app:Material_889078 .
+<< app:Material_889077 app:semanticallySimilarTo app:Material_889078 >> 
+    app:similarityScore 0.95 .
+
+app:Material_889078 app:semanticallySimilarTo app:Material_889079 .
+<< app:Material_889078 app:semanticallySimilarTo app:Material_889079 >> 
+    app:similarityScore 0.96 .
+
+app:Material_889077 app:semanticallySimilarTo app:Material_889079 .
+<< app:Material_889077 app:semanticallySimilarTo app:Material_889079 >> 
+    app:similarityScore 0.94 .
+
+# Rods - same material, different sizes
+app:Material_1226200 app:semanticallySimilarTo app:Material_1226224 .
+<< app:Material_1226200 app:semanticallySimilarTo app:Material_1226224 >> 
+    app:similarityScore 0.91 .
+
+#################################################################
+#    Substitution Contexts
+#################################################################
+
+app:Context_LowPressure a app:SubstitutionContext ;
+    app:contextDescription "low-pressure applications under 5000 PSI" ;
+    rdfs:label "Low Pressure Context" .
+
+app:Context_StandardTemp a app:SubstitutionContext ;
+    app:contextDescription "standard temperature range -20°F to 250°F" ;
+    rdfs:label "Standard Temperature Context" .
+
+app:Context_HighPressure a app:SubstitutionContext ;
+    app:contextDescription "high-pressure applications 5000-15000 PSI" ;
+    rdfs:label "High Pressure Context" .
+
+#################################################################
+#    Historical Substitution Events
+#################################################################
+
+# Event 1: O-Ring substitution in hydraulic pump repair
+app:SubEvent_20250315_001 a app:SubstitutionEvent ;
+    app:originalItem app:Material_100001941 ;
+    app:replacementItem app:Material_100001942 ;
+    app:substitutionDate "2025-03-15"^^xsd:date ;
+    app:substitutionContext app:Component_Seal_Primary ;
+    app:substitutionContextDescription "primary seal replacement in hydraulic pump, standard temperature" ;
+    app:workOrderNumber "WO-2025-031501" ;
+    app:substitutionReason "original material out of stock" ;
+    rdfs:label "Substitution Event: 100001941 -> 100001942 on 2025-03-15" .
+
+app:Material_100001941 app:hasSubstitutionEvent app:SubEvent_20250315_001 .
+app:Material_100001942 app:hasSubstitutionEvent app:SubEvent_20250315_001 .
+
+# Event 2: Same materials, different context
+app:SubEvent_20250622_001 a app:SubstitutionEvent ;
+    app:originalItem app:Material_100001941 ;
+    app:replacementItem app:Material_100001942 ;
+    app:substitutionDate "2025-06-22"^^xsd:date ;
+    app:substitutionContext app:Assembly_HydraulicPump ;
+    app:substitutionContextDescription "preventive maintenance, standard conditions" ;
+    app:workOrderNumber "WO-2025-062201" ;
+    app:substitutionReason "planned replacement, improved availability" ;
+    rdfs:label "Substitution Event: 100001941 -> 100001942 on 2025-06-22" .
+
+app:Material_100001941 app:hasSubstitutionEvent app:SubEvent_20250622_001 .
+app:Material_100001942 app:hasSubstitutionEvent app:SubEvent_20250622_001 .
+
+# Event 3: O-Ring substitution different pair
+app:SubEvent_20250810_001 a app:SubstitutionEvent ;
+    app:originalItem app:Material_100001942 ;
+    app:replacementItem app:Material_100001949 ;
+    app:substitutionDate "2025-08-10"^^xsd:date ;
+    app:substitutionContext app:Component_Seal_Primary ;
+    app:substitutionContextDescription "emergency repair in plant 2040" ;
+    app:workOrderNumber "WO-2025-081001" ;
+    app:substitutionReason "emergency replacement - nearest available substitute" ;
+    rdfs:label "Substitution Event: 100001942 -> 100001949 on 2025-08-10" .
+
+app:Material_100001942 app:hasSubstitutionEvent app:SubEvent_20250810_001 .
+app:Material_100001949 app:hasSubstitutionEvent app:SubEvent_20250810_001 .
+
+# Event 4: Nozzle substitution
+app:SubEvent_20250920_001 a app:SubstitutionEvent ;
+    app:originalItem app:Material_889077 ;
+    app:replacementItem app:Material_889078 ;
+    app:substitutionDate "2025-09-20"^^xsd:date ;
+    app:substitutionContext app:Component_ControlNozzle ;
+    app:substitutionContextDescription "nozzle block assembly, similar flow characteristics" ;
+    app:workOrderNumber "WO-2025-092001" ;
+    app:substitutionReason "size compatibility confirmed by engineering" ;
+    rdfs:label "Substitution Event: 889077 -> 889078 on 2025-09-20" .
+
+app:Material_889077 app:hasSubstitutionEvent app:SubEvent_20250920_001 .
+app:Material_889078 app:hasSubstitutionEvent app:SubEvent_20250920_001 .
+
+# Event 5: Rupture disc substitution
+app:SubEvent_20251105_001 a app:SubstitutionEvent ;
+    app:originalItem app:Material_103348 ;
+    app:replacementItem app:Material_103349 ;
+    app:substitutionDate "2025-11-05"^^xsd:date ;
+    app:substitutionContext app:Component_RuptureDisc ;
+    app:substitutionContextDescription "pressure relief valve, higher pressure rating acceptable" ;
+    app:workOrderNumber "WO-2025-110501" ;
+    app:substitutionReason "original obsolete, upgraded to higher pressure rating" ;
+    rdfs:label "Substitution Event: 103348 -> 103349 on 2025-11-05" .
+
+app:Material_103348 app:hasSubstitutionEvent app:SubEvent_20251105_001 .
+app:Material_103349 app:hasSubstitutionEvent app:SubEvent_20251105_001 .
+
+#################################################################
+#    Derived Substitution Relationships with Reasoning
+#################################################################
+
+# Based on component specification
+<< app:Material_103348 app:substitutes app:Material_103349 >> 
+    app:inComponentContext app:Component_RuptureDisc ;
+    app:substitutionConfidence 0.95 ;
+    app:substitutionSource "component-specification" ;
+    app:substitutionReasoning "Both materials are listed as valid options for rupture disc component in pressure valve assembly specification" .
+
+<< app:Material_103349 app:substitutes app:Material_103348 >> 
+    app:inComponentContext app:Component_RuptureDisc ;
+    app:substitutionConfidence 0.85 ;
+    app:substitutionSource "component-specification" ;
+    app:substitutionReasoning "Reverse substitution valid but requires pressure rating verification - 103349 has higher rating" .
+
+# Based on historical events
+<< app:Material_100001941 app:substitutes app:Material_100001942 >> 
+    app:inContext app:Component_Seal_Primary ;
+    app:substitutionConfidence 0.98 ;
+    app:substitutionSource "historical-event" ;
+    app:basedOnEvent app:SubEvent_20250315_001, app:SubEvent_20250622_001 ;
+    app:substitutionReasoning "Successfully substituted 2 times in similar seal contexts between 2025-03 and 2025-06" .
+
+<< app:Material_100001942 app:substitutes app:Material_100001941 >> 
+    app:inContext app:Component_Seal_Primary ;
+    app:substitutionConfidence 0.98 ;
+    app:substitutionSource "historical-event" ;
+    app:basedOnEvent app:SubEvent_20250315_001, app:SubEvent_20250622_001 ;
+    app:substitutionReasoning "Symmetric relationship - both materials successfully used interchangeably" .
+
+<< app:Material_100001942 app:substitutes app:Material_100001949 >> 
+    app:inContext app:Component_Seal_Primary ;
+    app:substitutionConfidence 0.90 ;
+    app:substitutionSource "historical-event" ;
+    app:basedOnEvent app:SubEvent_20250810_001 ;
+    app:substitutionReasoning "Emergency substitution validated in production, single occurrence" .
+
+# Based on semantic similarity
+<< app:Material_100001941 app:substitutes app:Material_100001949 >> 
+    app:inContext app:Context_StandardTemp ;
+    app:substitutionConfidence 0.85 ;
+    app:substitutionSource "semantic-similarity" ;
+    app:basedOnSimilarity << app:Material_100001941 app:semanticallySimilarTo app:Material_100001949 >> ;
+    app:substitutionReasoning "Materials have 85% description similarity - both NBR NIT 90 DURO O-Rings with compatible dimensions" .
+
+<< app:Material_889077 app:substitutes app:Material_889078 >> 
+    app:inComponentContext app:Component_ControlNozzle ;
+    app:substitutionConfidence 0.96 ;
+    app:substitutionSource "historical-event" ;
+    app:basedOnEvent app:SubEvent_20250920_001 ;
+    app:basedOnSimilarity << app:Material_889077 app:semanticallySimilarTo app:Material_889078 >> ;
+    app:substitutionReasoning "Historical validation plus 95% semantic similarity - Smith Series 70 nozzles with adjacent sizes" .
+
+# Expert validated substitution
+<< app:Material_1226200 app:substitutes app:Material_1226224 >> 
+    app:inContextDescription "structural applications requiring INC 718 material, size can vary based on load calculations" ;
+    app:substitutionConfidence 1.0 ;
+    app:substitutionSource "expert-knowledge" ;
+    app:validatedBy "Dr. Sarah Johnson, Materials Engineer" ;
+    app:validationDate "2025-10-15"^^xsd:date ;
+    app:substitutionReasoning "Expert review confirmed equivalent material properties with different diameter - substitution valid when structural load analysis permits larger diameter" .
+
+# OWL inference example (transitive through component)
+<< app:Material_889078 app:substitutes app:Material_889079 >> 
+    app:inComponentContext app:Component_ControlNozzle ;
+    app:substitutionConfidence 0.88 ;
+    app:substitutionSource "owl-inference" ;
+    app:inferredBy "Component-Based-Inference-Rule" ;
+    app:basedOnSimilarity << app:Material_889078 app:semanticallySimilarTo app:Material_889079 >> ;
+    app:substitutionReasoning "Both materials can fill ControlNozzle component per specification (canBeFilledBy relationship) and have 96% semantic similarity" .
+
+# Simple historical relationship (without detailed events)
+app:Material_100001924 app:historicallySubstitutedBy app:Material_100001941 .
+
+###  End of Sample Data
