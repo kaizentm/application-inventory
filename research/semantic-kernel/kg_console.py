@@ -14,6 +14,7 @@ from semantic_kernel.contents.chat_history import ChatHistory
 from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_prompt_execution_settings import (
     AzureChatPromptExecutionSettings,
 )
+from azure.identity import DefaultAzureCredential, get_bearer_token_provider
 
 async def main():
 
@@ -25,13 +26,14 @@ async def main():
     api_key = os.getenv("AZURE_OPENAI_API_KEY")
     system_message_file = os.getenv("SYSTEM_MESSAGE_FILE")
 
-
-    # Add Azure OpenAI chat completion
+    # Add Azure OpenAI chat completion using Azure AD authentication
+    credential = DefaultAzureCredential()
+    token_provider = get_bearer_token_provider(credential, "https://cognitiveservices.azure.com/.default")
     chat_completion = AzureChatCompletion(
         deployment_name=deployment_name,
-        api_key=api_key,
-        base_url=endpoint,
-        api_version="2023-12-01-preview", 
+        ad_token_provider=token_provider,
+        endpoint=endpoint,
+        api_version="2024-12-01-preview", 
     )
     kernel.add_service(chat_completion)
 

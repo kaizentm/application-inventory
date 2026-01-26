@@ -25,7 +25,7 @@ app:deployedTo rdf:type owl:ObjectProperty ;
             rdfs:domain app:Application ;
             rdfs:range app:Host .
 
-###  http://application-inventory/exposedIn
+###  http://application-inventory/exposedIn. 
 app:exposedIn rdf:type owl:ObjectProperty ;
               rdfs:domain app:Vulnerability ;
               rdfs:range app:Package .

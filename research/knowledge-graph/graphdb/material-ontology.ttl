@@ -1,0 +1,709 @@
+@prefix app: <http://material-inventory/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://material-inventory/> .
+
+<http://material-inventory/assembly> rdf:type owl:Ontology ;
+    rdfs:label "Machine Assembly and Material Substitution Ontology" ;
+    rdfs:comment "Ontology for describing machine assemblies, components, materials, and substitution relationships based on historical data, semantic similarity, and logical rules" ;
+    owl:versionInfo "1.0" .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  http://material-inventory/hasComponent
+app:hasComponent rdf:type owl:ObjectProperty ;
+    rdfs:domain app:Assembly ;
+    rdfs:range app:Component ;
+    rdfs:label "has component" ;
+    rdfs:comment "Associates an assembly with its components" .
+
+###  http://material-inventory/componentOf
+app:componentOf rdf:type owl:ObjectProperty ;
+    owl:inverseOf app:hasComponent ;
+    rdfs:domain app:Component ;
+    rdfs:range app:Assembly ;
+    rdfs:label "component of" ;
+    rdfs:comment "Indicates that a component is part of an assembly" .
+
+###  http://material-inventory/canBeFilledBy
+app:canBeFilledBy rdf:type owl:ObjectProperty ;
+    rdfs:domain app:Component ;
+    rdfs:range app:Item ;
+    rdfs:label "can be filled by" ;
+    rdfs:comment "Indicates that a component position can be filled by a specific material or sub-assembly" .
+
+###  http://material-inventory/fillsComponent
+app:fillsComponent rdf:type owl:ObjectProperty ;
+    owl:inverseOf app:canBeFilledBy ;
+    rdfs:domain app:Item ;
+    rdfs:range app:Component ;
+    rdfs:label "fills component" ;
+    rdfs:comment "Indicates that a material or assembly fills a specific component position" .
+
+###  http://material-inventory/substitutes
+app:substitutes rdf:type owl:ObjectProperty ;
+    rdfs:domain app:Item ;
+    rdfs:range app:Item ;
+    rdfs:label "substitutes" ;
+    rdfs:comment "Indicates that one item can substitute another within a specific context (component/assembly). Substitution is context-dependent: A substitutes B in context X does not imply A substitutes B in all contexts. Use RDF-star annotations to specify the context." .
+
+###  http://material-inventory/historicallySubstitutedBy
+app:historicallySubstitutedBy rdf:type owl:ObjectProperty ;
+    rdfs:domain app:Item ;
+    rdfs:range app:Item ;
+    rdfs:subPropertyOf app:substitutes ;
+    rdfs:label "historically substituted by" ;
+    rdfs:comment "Documents that one item was historically substituted by another. For detailed tracking of individual substitution events (date, context, work order), use SubstitutionEvent instances instead." .
+
+###  http://material-inventory/semanticallySimilarTo
+app:semanticallySimilarTo rdf:type owl:ObjectProperty ;
+    rdf:type owl:SymmetricProperty ;
+    rdfs:domain app:Item ;
+    rdfs:range app:Item ;
+    rdfs:label "semantically similar to" ;
+    rdfs:comment "Indicates semantic similarity between items based on their material descriptions" .
+
+###  http://material-inventory/locatedInPlant
+app:locatedInPlant rdf:type owl:ObjectProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range app:Plant ;
+    rdfs:label "located in plant" ;
+    rdfs:comment "Indicates the plant facility where a material is stored or located" .
+
+###  http://material-inventory/managedByController
+app:managedByController rdf:type owl:ObjectProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range app:MRPController ;
+    rdfs:label "managed by controller" ;
+    rdfs:comment "Indicates the MRP (Material Requirements Planning) controller responsible for managing this material" .
+
+###  http://material-inventory/belongsToProfitCenter
+app:belongsToProfitCenter rdf:type owl:ObjectProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range app:ProfitCenter ;
+    rdfs:label "belongs to profit center" ;
+    rdfs:comment "Associates a material with its profit center" .
+
+###  http://material-inventory/inContext
+app:inContext rdf:type owl:ObjectProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range [ owl:unionOf ( app:Component app:Assembly app:SubstitutionContext ) ] ;
+    rdfs:label "in context" ;
+    rdfs:comment "Specifies the structured context (component, assembly, or defined context) in which a substitution relationship is valid. For text-based contexts, use inContextDescription instead." .
+
+###  http://material-inventory/inComponentContext
+app:inComponentContext rdf:type owl:ObjectProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range app:Component ;
+    rdfs:label "in component context" ;
+    rdfs:comment "Specifies the specific component context where substitution is valid." .
+
+###  http://material-inventory/inAssemblyContext
+app:inAssemblyContext rdf:type owl:ObjectProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range app:Assembly ;
+    rdfs:label "in assembly context" ;
+    rdfs:comment "Specifies the assembly context where substitution is valid." .
+
+###  http://material-inventory/hasSubstitutionEvent
+app:hasSubstitutionEvent rdf:type owl:ObjectProperty ;
+    rdfs:domain app:Item ;
+    rdfs:range app:SubstitutionEvent ;
+    rdfs:label "has substitution event" ;
+    rdfs:comment "Links an item to a historical substitution event where this item was involved." .
+
+###  http://material-inventory/originalItem
+app:originalItem rdf:type owl:ObjectProperty ;
+    rdfs:domain app:SubstitutionEvent ;
+    rdfs:range app:Item ;
+    rdfs:label "original item" ;
+    rdfs:comment "The item that was replaced in this substitution event." .
+
+###  http://material-inventory/replacementItem
+app:replacementItem rdf:type owl:ObjectProperty ;
+    rdfs:domain app:SubstitutionEvent ;
+    rdfs:range app:Item ;
+    rdfs:label "replacement item" ;
+    rdfs:comment "The item that replaced the original in this substitution event." .
+
+###  http://material-inventory/substitutionContext
+app:substitutionContext rdf:type owl:ObjectProperty ;
+    rdfs:domain app:SubstitutionEvent ;
+    rdfs:range [ owl:unionOf ( app:Component app:Assembly app:SubstitutionContext ) ] ;
+    rdfs:label "substitution context" ;
+    rdfs:comment "The structured context (component, assembly, or defined context) in which this substitution event occurred." .
+
+###  http://material-inventory/basedOnEvent
+app:basedOnEvent rdf:type owl:ObjectProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range app:SubstitutionEvent ;
+    rdfs:label "based on event" ;
+    rdfs:comment "Links a substitution relationship to historical SubstitutionEvent(s) that justify this relationship." .
+
+###  http://material-inventory/basedOnSimilarity
+app:basedOnSimilarity rdf:type owl:ObjectProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range << app:Item app:semanticallySimilarTo app:Item >> ;
+    rdfs:label "based on similarity" ;
+    rdfs:comment "Links a substitution relationship to semantic similarity relationship that justifies this substitution." .
+
+#################################################################
+#    Data properties
+#################################################################
+
+###  Material Identification Properties
+
+###  http://material-inventory/materialNumber
+app:materialNumber rdf:type owl:DatatypeProperty ,
+    owl:FunctionalProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:string ;
+    rdfs:label "material number" ;
+    rdfs:comment "Unique identifier for a material" .
+
+###  http://material-inventory/materialDescription
+app:materialDescription rdf:type owl:DatatypeProperty ,
+    owl:FunctionalProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:string ;
+    rdfs:label "material description" ;
+    rdfs:comment "Textual description of the material including specifications" .
+
+###  Plant and Organization Properties
+
+###  http://material-inventory/plantCode
+app:plantCode rdf:type owl:DatatypeProperty ,
+    owl:FunctionalProperty ;
+    rdfs:domain app:Plant ;
+    rdfs:range xsd:string ;
+    rdfs:label "plant code" ;
+    rdfs:comment "Unique code identifying a plant facility" .
+
+###  http://material-inventory/profitCenterCode
+app:profitCenterCode rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:ProfitCenter ;
+    rdfs:range xsd:string ;
+    rdfs:label "profit center code" .
+
+###  http://material-inventory/psl
+app:psl rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:string ;
+    rdfs:label "PSL" ;
+    rdfs:comment "Product Service Line classification" .
+
+###  http://material-inventory/mrpControllerCode
+app:mrpControllerCode rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:MRPController ;
+    rdfs:range xsd:string ;
+    rdfs:label "MRP controller code" .
+
+###  Inventory Quantity Properties
+
+###  http://material-inventory/onHandInventory
+app:onHandInventory rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:integer ;
+    rdfs:label "on hand inventory" ;
+    rdfs:comment "Current quantity of material in stock" .
+
+###  http://material-inventory/onHandInventoryValue
+app:onHandInventoryValue rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "on hand inventory value" ;
+    rdfs:comment "Monetary value of on-hand inventory" .
+
+###  http://material-inventory/poQuantity
+app:poQuantity rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:integer ;
+    rdfs:label "purchase order quantity" ;
+    rdfs:comment "Quantity on purchase orders" .
+
+###  http://material-inventory/prodOrderQuantity
+app:prodOrderQuantity rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:integer ;
+    rdfs:label "production order quantity" ;
+    rdfs:comment "Quantity on production orders" .
+
+###  http://material-inventory/totalDemand
+app:totalDemand rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:integer ;
+    rdfs:label "total demand" ;
+    rdfs:comment "Total demand for the material" .
+
+###  http://material-inventory/sixMonthTotalDemand
+app:sixMonthTotalDemand rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:integer ;
+    rdfs:label "6 month total demand" .
+
+###  http://material-inventory/strandedInventory
+app:strandedInventory rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:integer ;
+    rdfs:label "stranded inventory" ;
+    rdfs:comment "Quantity of inventory that is stranded or obsolete" .
+
+###  http://material-inventory/strandedInventoryValue
+app:strandedInventoryValue rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "stranded inventory value" .
+
+###  http://material-inventory/slowMoveQuantity
+app:slowMoveQuantity rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:integer ;
+    rdfs:label "slow move quantity" ;
+    rdfs:comment "Quantity identified as slow-moving inventory" .
+
+###  http://material-inventory/slowMoveValue
+app:slowMoveValue rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "slow move value" .
+
+###  http://material-inventory/eoQuantity
+app:eoQuantity rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:integer ;
+    rdfs:label "E&O quantity" ;
+    rdfs:comment "Excess and Obsolete quantity" .
+
+###  http://material-inventory/eoValue
+app:eoValue rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "E&O value" ;
+    rdfs:comment "Excess and Obsolete value" .
+
+###  Planning and Timing Properties
+
+###  http://material-inventory/leadTime
+app:leadTime rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "lead time" ;
+    rdfs:comment "Lead time in days for procurement or production" .
+
+###  http://material-inventory/safetyStock
+app:safetyStock rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "safety stock" ;
+    rdfs:comment "Safety stock level maintained for the material" .
+
+###  http://material-inventory/dio
+app:dio rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "days inventory outstanding" ;
+    rdfs:comment "DIO - Days Inventory Outstanding metric" .
+
+###  http://material-inventory/lastUsedDate
+app:lastUsedDate rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:date ;
+    rdfs:label "last used date" ;
+    rdfs:comment "Date when the material was last used" .
+
+###  http://material-inventory/nextRequirementDate
+app:nextRequirementDate rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:date ;
+    rdfs:label "next requirement date" ;
+    rdfs:comment "Date when the material will next be required" .
+
+###  http://material-inventory/nextPOReceiptDate
+app:nextPOReceiptDate rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:date ;
+    rdfs:label "next PO receipt date" ;
+    rdfs:comment "Expected date for next purchase order receipt" .
+
+###  Flags and Status Properties
+
+###  http://material-inventory/redeploymentFlag
+app:redeploymentFlag rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Material ;
+    rdfs:range xsd:string ;
+    rdfs:label "redeployment flag" ;
+    rdfs:comment "Flag indicating if material is marked for redeployment" .
+
+###  Assembly and Component Properties
+
+###  http://material-inventory/assemblyName
+app:assemblyName rdf:type owl:DatatypeProperty ,
+    owl:FunctionalProperty ;
+    rdfs:domain app:Assembly ;
+    rdfs:range xsd:string ;
+    rdfs:label "assembly name" ;
+    rdfs:comment "Name of the assembly (e.g., Oil Filter, Alternator, Transmission)" .
+
+###  http://material-inventory/assemblyVersion
+app:assemblyVersion rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Assembly ;
+    rdfs:range xsd:string ;
+    rdfs:label "assembly version" ;
+    rdfs:comment "Version or revision of the assembly specification" .
+
+###  http://material-inventory/componentName
+app:componentName rdf:type owl:DatatypeProperty ,
+    owl:FunctionalProperty ;
+    rdfs:domain app:Component ;
+    rdfs:range xsd:string ;
+    rdfs:label "component name" ;
+    rdfs:comment "Name describing the component role or position" .
+
+###  http://material-inventory/componentPosition
+app:componentPosition rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Component ;
+    rdfs:range xsd:string ;
+    rdfs:label "component position" ;
+    rdfs:comment "Position identifier or location code of the component within the assembly" .
+
+###  http://material-inventory/componentQuantity
+app:componentQuantity rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:Component ;
+    rdfs:range xsd:integer ;
+    rdfs:label "component quantity" ;
+    rdfs:comment "Number of instances of this component in the assembly" .
+
+###  http://material-inventory/contextDescription
+app:contextDescription rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:SubstitutionContext ;
+    rdfs:range xsd:string ;
+    rdfs:label "context description" ;
+    rdfs:comment "Textual description of a substitution context, e.g., 'in oil filters under temperature <20 degrees', 'high-pressure applications', 'marine environments'" .
+
+###  http://material-inventory/inContextDescription
+app:inContextDescription rdf:type owl:DatatypeProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range xsd:string ;
+    rdfs:label "in context description" ;
+    rdfs:comment "Free-text description of the context in which substitution is valid. Examples: 'in oil filters under temperature <20 degrees', 'for high-vibration environments', 'when used in marine applications'" .
+
+###  Substitution Metadata Properties (for RDF-star/RDF 1.2)
+
+###  http://material-inventory/substitutionConfidence
+app:substitutionConfidence rdf:type owl:DatatypeProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "substitution confidence" ;
+    rdfs:comment "Confidence score for substitution relationship (0.0 to 1.0)" .
+
+###  http://material-inventory/substitutionDate
+app:substitutionDate rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:SubstitutionEvent ;
+    rdfs:range xsd:date ;
+    rdfs:label "substitution date" ;
+    rdfs:comment "Date when this specific substitution event occurred." .
+
+###  http://material-inventory/substitutionContextDescription
+app:substitutionContextDescription rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:SubstitutionEvent ;
+    rdfs:range xsd:string ;
+    rdfs:label "substitution context description" ;
+    rdfs:comment "Free-text description of the context in which this substitution event occurred. Examples: 'in oil filters under temperature <20 degrees', 'emergency repair in Plant 2040'." .
+
+###  http://material-inventory/workOrderNumber
+app:workOrderNumber rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:SubstitutionEvent ;
+    rdfs:range xsd:string ;
+    rdfs:label "work order number" ;
+    rdfs:comment "Work order or job number associated with this substitution event." .
+
+###  http://material-inventory/substitutionReason
+app:substitutionReason rdf:type owl:DatatypeProperty ;
+    rdfs:domain app:SubstitutionEvent ;
+    rdfs:range xsd:string ;
+    rdfs:label "substitution reason" ;
+    rdfs:comment "Reason for the substitution (e.g., 'original out of stock', 'engineering change', 'emergency replacement')." .
+
+###  http://material-inventory/substitutionSource
+app:substitutionSource rdf:type owl:DatatypeProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range xsd:string ;
+    rdfs:label "substitution source" ;
+    rdfs:comment "Source or basis for this substitution relationship. Allowed values: 'historical-event' (based on substitution events), 'semantic-similarity' (based on material description similarity), 'owl-inference' (inferred by OWL reasoning/axioms), 'expert-knowledge' (manually added by domain expert), 'component-specification' (from assembly/component specifications)." .
+
+###  http://material-inventory/substitutionReasoning
+app:substitutionReasoning rdf:type owl:DatatypeProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range xsd:string ;
+    rdfs:label "substitution reasoning" ;
+    rdfs:comment "Detailed explanation of why this substitution is valid. Examples: 'Substituted 5 times in similar contexts', 'Materials have 95% description similarity', 'Both materials can fill the same component per specification', 'Expert validation by John Doe on 2025-12-15'." .
+
+###  http://material-inventory/inferredBy
+app:inferredBy rdf:type owl:DatatypeProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range xsd:string ;
+    rdfs:label "inferred by" ;
+    rdfs:comment "Name of the OWL reasoner, rule, or inference mechanism that derived this substitution relationship (e.g., 'HermiT', 'Pellet', 'SPARQL-Rule-3', 'Component-Based-Inference')." .
+
+###  http://material-inventory/validatedBy
+app:validatedBy rdf:type owl:DatatypeProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range xsd:string ;
+    rdfs:label "validated by" ;
+    rdfs:comment "Name or identifier of the expert who validated or manually created this substitution relationship." .
+
+###  http://material-inventory/validationDate
+app:validationDate rdf:type owl:DatatypeProperty ;
+    rdfs:domain << app:Item app:substitutes app:Item >> ;
+    rdfs:range xsd:date ;
+    rdfs:label "validation date" ;
+    rdfs:comment "Date when this substitution relationship was validated or created by an expert." .
+
+###  http://material-inventory/similarityScore
+app:similarityScore rdf:type owl:DatatypeProperty ;
+    rdfs:domain << app:Item app:semanticallySimilarTo app:Item >> ;
+    rdfs:range xsd:decimal ;
+    rdfs:label "similarity score" ;
+    rdfs:comment "Semantic similarity score between item descriptions (0.0 to 1.0)" .
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://material-inventory/Thing
+app:Thing rdf:type owl:Class ;
+    rdfs:label "Thing" ;
+    rdfs:comment "Root class for all entities in the assembly inventory ontology" .
+
+###  http://material-inventory/Item
+app:Item rdf:type owl:Class ;
+    rdfs:subClassOf app:Thing ;
+    rdfs:label "Item" ;
+    rdfs:comment "Abstract class for anything that can fill a component position (Material or Assembly)" .
+
+###  http://material-inventory/Assembly
+app:Assembly rdf:type owl:Class ;
+    rdfs:subClassOf app:Item ;
+    rdfs:label "Assembly" ;
+    rdfs:comment "A machine assembly composed of multiple components (e.g., oil filter, alternator, fuel filter, transmission)" .
+
+###  http://material-inventory/Material
+app:Material rdf:type owl:Class ;
+    rdfs:subClassOf app:Item ;
+    rdfs:label "Material" ;
+    rdfs:comment "A basic material or part that cannot be further decomposed (e.g., o-ring, seal, cable, bolt, screw)" .
+
+###  http://material-inventory/Component
+app:Component rdf:type owl:Class ;
+    rdfs:subClassOf app:Thing ;
+    rdfs:label "Component" ;
+    rdfs:comment "A component role or position within an assembly that can be filled by one or more materials or sub-assemblies" .
+
+###  http://material-inventory/Plant
+app:Plant rdf:type owl:Class ;
+    rdfs:subClassOf app:Thing ;
+    rdfs:label "Plant" ;
+    rdfs:comment "A manufacturing or storage plant facility" .
+
+###  http://material-inventory/ProfitCenter
+app:ProfitCenter rdf:type owl:Class ;
+    rdfs:subClassOf app:Thing ;
+    rdfs:label "Profit Center" ;
+    rdfs:comment "Organizational profit center" .
+
+###  http://material-inventory/MRPController
+app:MRPController rdf:type owl:Class ;
+    rdfs:subClassOf app:Thing ;
+    rdfs:label "MRP Controller" ;
+    rdfs:comment "Material Requirements Planning controller responsible for material management" .
+
+###  http://material-inventory/Substitutable
+app:Substitutable owl:equivalentClass [
+    owl:unionOf (
+        # Items that can substitute other items (in some context)
+        [rdf:type owl:Restriction ;
+         owl:onProperty app:substitutes ;
+         owl:someValuesFrom app:Item]
+        
+        # Items with historical substitution data
+        [rdf:type owl:Restriction ;
+         owl:onProperty app:historicallySubstitutedBy ;
+         owl:someValuesFrom app:Item]
+        
+        # Items that are semantically similar
+        [rdf:type owl:Restriction ;
+         owl:onProperty app:semanticallySimilarTo ;
+         owl:someValuesFrom app:Item]
+        
+        # Items that fill components with multiple options
+        # If a component can be filled by at least 2 different items,
+        # those items are mutually substitutable within that component context
+        [rdf:type owl:Restriction ;
+         owl:onProperty app:fillsComponent ;
+         owl:someValuesFrom [
+             rdf:type owl:Restriction ;
+             owl:onProperty app:canBeFilledBy ;
+             owl:minCardinality "2"^^xsd:nonNegativeInteger
+         ]]
+    )
+] ;
+rdf:type owl:Class ;
+rdfs:subClassOf app:Item ;
+rdfs:label "Substitutable" ;
+rdfs:comment "An item that can substitute or be substituted by another item within a specific context (component or assembly). All substitution relationships are context-dependent." .
+
+###  http://material-inventory/SubstitutionContext
+app:SubstitutionContext rdf:type owl:Class ;
+    rdfs:subClassOf app:Thing ;
+    rdfs:label "Substitution Context" ;
+    rdfs:comment "Represents a named context in which substitution relationships are valid. Can be structured (linked to components/assemblies) or defined by textual description (e.g., 'in oil filters under temperature <20 degrees', 'for marine applications'). Use contextDescription property for text-based context definitions." .
+
+###  http://material-inventory/SubstitutionEvent
+app:SubstitutionEvent rdf:type owl:Class ;
+    rdfs:subClassOf app:Thing ;
+    rdfs:label "Substitution Event" ;
+    rdfs:comment "Represents a specific historical occurrence where one item (originalItem) was substituted by another item (replacementItem) at a particular date and in a specific context. Each substitution event is tracked individually with its own date, context, work order, and reason." .
+
+#################################################################
+#    Substitution Reasoning Rules (Context-Dependent)
+#################################################################
+
+# IMPORTANT: All substitution is context-dependent!
+# A substitutes B in context X does NOT imply A substitutes B in context Y
+
+# Rule 1: Component-based substitution
+# If items A and B both can fill the same component C in assembly X,
+# then A can substitute B within that component context
+# This is captured by the Substitutable class definition using owl:Restriction
+
+# Rule 2: Context-dependent symmetry
+# If A substitutes B in context X, then B substitutes A in context X
+# (but not necessarily in other contexts)
+# Implementation: << :A app:substitutes :B >> app:inContext :ContextX .
+#               << :B app:substitutes :A >> app:inContext :ContextX .
+
+# Rule 3: Context-dependent transitivity
+# If A substitutes B in context X and B substitutes C in context X,
+# then A can substitute C in context X
+# (but not necessarily in other contexts)
+
+# Rule 4: Historical substitution implies context-specific substitution
+# historicallySubstitutedBy is a subPropertyOf substitutes and should
+# always be annotated with the context where it occurred
+
+# Rule 5: Semantic similarity suggests potential substitution
+# Items that are semantically similar MAY be substitutable in similar contexts,
+# but this requires validation for each specific context
+
+# Implementation approaches:
+# - SPARQL CONSTRUCT queries to infer symmetric/transitive relationships within same context
+# - Application logic to validate context before suggesting substitutions
+# - SWRL rules with context guards
+# - Graph patterns that match context-specific substitution chains
+
+#################################################################
+#    Example Usage Patterns
+#################################################################
+
+# Example 1: Assembly with components
+# :OilFilterAssembly a app:Assembly ;
+#     app:assemblyName "Oil Filter Model XYZ" ;
+#     app:hasComponent :SealComponent, :HousingComponent .
+
+# Example 2: Component with multiple material options
+# :SealComponent a app:Component ;
+#     app:componentName "Primary Seal" ;
+#     app:canBeFilledBy :Material_10001, :Material_10002, :Material_10003 .
+
+# Example 3: Material with attributes
+# :Material_10001 a app:Material ;
+#     app:materialNumber "10001" ;
+#     app:materialDescription "O-RING, VITON, 3/8 X 1/4 X 1/16" ;
+#     app:onHandInventory 45 ;
+#     app:leadTime 5.0 .
+
+# Example 4: Context-dependent substitution relationships with reasoning
+#
+# STRUCTURED CONTEXT: Material 10001 can substitute 10002 in specific component
+# << :Material_10001 app:substitutes :Material_10002 >> app:inComponentContext :SealComponent ;
+#     app:substitutionConfidence 0.95 ;
+#     app:substitutionSource "component-specification" ;
+#     app:substitutionReasoning "Both materials listed as valid options for SealComponent in assembly specification" .
+#
+# TEXT-BASED CONTEXT: Using free-text context description
+# << :Material_10001 app:substitutes :Material_10002 >> app:inContextDescription "in oil filters under temperature <20 degrees" ;
+#     app:substitutionConfidence 0.92 ;
+#     app:substitutionSource "semantic-similarity" ;
+#     app:basedOnSimilarity << :Material_10001 app:semanticallySimilarTo :Material_10002 >> ;
+#     app:substitutionReasoning "Materials have 92% description similarity and compatible specifications" .
+#
+# EXPERT-VALIDATED SUBSTITUTION:
+# << :Material_10005 app:substitutes :Material_10006 >> app:inContextDescription "high-pressure applications" ;
+#     app:substitutionConfidence 1.0 ;
+#     app:substitutionSource "expert-knowledge" ;
+#     app:validatedBy "John Doe, Senior Engineer" ;
+#     app:validationDate "2025-11-10"^^xsd:date ;
+#     app:substitutionReasoning "Expert review confirmed equivalent performance in high-pressure tests" .
+#
+# INFERENCE-BASED SUBSTITUTION:
+# << :Material_10007 app:substitutes :Material_10008 >> app:inComponentContext :FilterHousing ;
+#     app:substitutionConfidence 0.85 ;
+#     app:substitutionSource "owl-inference" ;
+#     app:inferredBy "Pellet-Reasoner" ;
+#     app:substitutionReasoning "Inferred via transitive property: 10007→10009→10008 in same component context" .
+#
+# HISTORICAL SUBSTITUTION EVENTS: Track each individual substitution occurrence
+# First substitution event:
+# :SubEvent_001 a app:SubstitutionEvent ;
+#     app:originalItem :Material_10001 ;
+#     app:replacementItem :Material_10003 ;
+#     app:substitutionDate "2025-03-15"^^xsd:date ;
+#     app:substitutionContext :OilFilterAssembly ;
+#     app:substitutionContextDescription "in oil filters under temperature <20 degrees" ;
+#     app:workOrderNumber "WO-2025-0315" ;
+#     app:substitutionReason "original out of stock" .
+#
+# :Material_10001 app:hasSubstitutionEvent :SubEvent_001 .
+# :Material_10003 app:hasSubstitutionEvent :SubEvent_001 .
+#
+# SUBSTITUTION BASED ON HISTORICAL EVENTS:
+# << :Material_10001 app:substitutes :Material_10003 >> app:inContext :OilFilterAssembly ;
+#     app:substitutionConfidence 0.98 ;
+#     app:substitutionSource "historical-event" ;
+#     app:basedOnEvent :SubEvent_001, :SubEvent_002, :SubEvent_004 ;
+#     app:substitutionReasoning "Successfully substituted 3 times in similar oil filter contexts between 2025-03 and 2025-11" .
+#
+# Second substitution event (same materials, different date/context):
+# :SubEvent_002 a app:SubstitutionEvent ;
+#     app:originalItem :Material_10001 ;
+#     app:replacementItem :Material_10003 ;
+#     app:substitutionDate "2025-06-22"^^xsd:date ;
+#     app:substitutionContext :FuelFilterAssembly ;
+#     app:workOrderNumber "WO-2025-0622" ;
+#     app:substitutionReason "engineering change order" .
+#
+# Third substitution event (different materials):
+# :SubEvent_003 a app:SubstitutionEvent ;
+#     app:originalItem :Material_10002 ;
+#     app:replacementItem :Material_10004 ;
+#     app:substitutionDate "2025-08-10"^^xsd:date ;
+#     app:substitutionContextDescription "high-pressure marine applications" ;
+#     app:workOrderNumber "WO-2025-0810" ;
+#     app:substitutionReason "improved performance requirements" .
+#
+# Semantic similarity (context-independent attribute)
+# :Material_10001 app:semanticallySimilarTo :Material_10004 .
+# << :Material_10001 app:semanticallySimilarTo :Material_10004 >> app:similarityScore 0.87 .
+#
+# Note: Symmetry must be explicit per context
+# << :Material_10002 app:substitutes :Material_10001 >> app:inContextDescription "in oil filters under temperature <20 degrees" ;
+#     app:substitutionConfidence 0.92 ;
+#     app:substitutionSource "historical-event" ;
+#     app:substitutionReasoning "Reverse relationship inferred from historical data" .
+
+###  Generated for Material Inventory Knowledge Graph
